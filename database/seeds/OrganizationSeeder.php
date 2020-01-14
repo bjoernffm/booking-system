@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Seeder;
 
-class AircraftsTableSeeder extends Seeder
+class OrganizationSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -11,6 +11,6 @@ class AircraftsTableSeeder extends Seeder
      */
     public function run()
     {
-        factory(App\Aircraft::class, 10)->create();
+        //
     }
 }

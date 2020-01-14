@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.appLogout')
 
 @section('content')
 <div class="container">
@@ -41,13 +41,11 @@
 
                         <div class="form-group row">
                             <div class="col-md-6 offset-md-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
+                                <input type="checkbox" name="remember" id="remember" {{ old('remember') ? 'checked' : '' }}>
 
-                                    <label class="form-check-label" for="remember">
-                                        {{ __('Remember Me') }}
-                                    </label>
-                                </div>
+                                <label style="cursor: pointer;" for="remember">
+                                    {{ __('Remember Me') }}
+                                </label>
                             </div>
                         </div>
 

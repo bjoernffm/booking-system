@@ -28,6 +28,7 @@ The above copyright notice and this permission notice shall be included in all c
         <link rel="apple-touch-icon" sizes="152x152" href="https://www.fvl-online.de/files/2013fvl/img/apple-touch-icon-152x152.png" />
         <link rel="icon" type="image/png" href="favicon.ico">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>
             FVL BOOKING SYSTEM
         </title>
@@ -41,7 +42,7 @@ The above copyright notice and this permission notice shall be included in all c
         <link href="/booking-system/css/chosen.css" rel="stylesheet" />
     </head>
 
-    <body class="">
+    <body>
         <div class="wrapper">
             <div class="sidebar" data-color="white" data-active-color="primary">
                 <!--
@@ -60,7 +61,7 @@ The above copyright notice and this permission notice shall be included in all c
                 <div class="sidebar-wrapper">
                     <ul class="nav">
                         <li @if (isset($title) and $title == 'Dashboard') class="active" @endif>
-                            <a href="./dashboard.html">
+                            <a href="{{ action('HomeController@index') }}">
                                 <i class="nc-icon nc-bank"></i>
                                 <p>Dashboard</p>
                             </a>
@@ -110,11 +111,11 @@ The above copyright notice and this permission notice shall be included in all c
                                     <span class="navbar-toggler-bar bar3"></span>
                                 </button>
                             </div>
-                            <a class="navbar-brand" href="#pablo">
+                            <span class="navbar-brand" style="color: #66615B;">
                                 @if (isset($title))
                                     {{ $title }}
                                 @endif
-                            </a>
+                            </span>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                             <span class="navbar-toggler-bar navbar-kebab"></span>
@@ -123,22 +124,12 @@ The above copyright notice and this permission notice shall be included in all c
                         </button>
                         <div class="collapse navbar-collapse justify-content-end" id="navigation">
                             @auth
-                            <form>
-                                <div class="input-group no-border">
-                                    <input type="text" value="" class="form-control" placeholder="Search...">
-                                    <div class="input-group-append">
-                                        <div class="input-group-text">
-                                            <i class="nc-icon nc-zoom-split"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </form>
                             <ul class="navbar-nav">
                                 <li class="nav-item btn-rotate dropdown">
                                     <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="nc-icon nc-settings-gear-65 d-lg-none"></i>
                                         <p>
-                                            <span class="d-md-block">{{ Auth::user()->name }}</span>
+                                            <span class="d-md-block">{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</span>
                                         </p>
                                     </a>
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
@@ -188,11 +179,6 @@ The above copyright notice and this permission notice shall be included in all c
                 </footer>
             </div>
         </div>
-        <script>
-            let priceAdult = {{ env('PRICE_ADULT') }};
-            let priceChild = {{ env('PRICE_CHILD') }};
-            @yield('javascript')
-        </script>
         <!--   Core JS Files   -->
         <script src="/booking-system/assets/js/core/jquery.min.js"></script>
         <script src="/booking-system/assets/js/core/popper.min.js"></script>

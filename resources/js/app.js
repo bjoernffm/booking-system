@@ -5,8 +5,10 @@
  */
 
 require('./bootstrap');
-require('./createBooking');
 require('chosen-js');
+import { SVG } from '@svgdotjs/svg.js';
+
+window.SVG = SVG;
 
 $(document).ready(function() {
     $(".chosen-select").chosen();

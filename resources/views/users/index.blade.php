@@ -20,26 +20,26 @@
                             @foreach ($users as $user)
                             <tr>
                                 <td>
-                                    <a href="{{ action('UserController@edit', ['id' => $user->id]) }}">{{ $user->firstname }} {{ $user->lastname }}</a>
+                                    <a href="{{ action('UserController@edit', ['user' => $user->id]) }}">{{ $user->firstname }} {{ $user->lastname }}</a>
                                 </td>
                                 <td>
-                                    <a href="mailto:{{ $user->email }}">{{ $user->email }}</a>
                                     @if ($user->email_verified_at != null)
+                                        <a href="mailto:{{ $user->email }}">{{ $user->email }}</a>
                                         <i class="fa fa-check"></i>
                                     @else
-                                        <button class="btn btn-sm btn-primary">verify</button>
+                                        {{ $user->email }}
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="tel:{{ $user->mobile }}">{{ $user->mobile_formatted }}</a>
                                     @if ($user->mobile_verified_at != null)
+                                        <a href="tel:{{ $user->mobile }}">{{ $user->mobile_formatted }}</a>
                                         <i class="fa fa-check"></i>
                                     @else
-                                        <button class="btn btn-sm btn-primary">verify</button>
+                                        {{ $user->mobile_formatted }}
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ action('UserController@edit', ['id' => $user->id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
+                                    <a href="{{ action('UserController@edit', ['user' => $user->id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
                                     <a href="#" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>

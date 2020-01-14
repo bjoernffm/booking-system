@@ -25,7 +25,9 @@ class AircraftController extends Controller
                 'aircraft_types.description',
                 'aircraft_types.engine_count',
                 'aircraft_types.engine_type'
-            )->orderBy('callsign', 'asc')
+            )
+            ->whereNull('deleted_at')
+            ->orderBy('callsign', 'asc')
             ->get();
 
         return view('aircraft/index', ['title' => 'Aircraft', 'aircrafts' => $aircrafts]);
@@ -108,7 +110,7 @@ class AircraftController extends Controller
     public function update(Request $request, Aircraft $aircraft)
     {
         $validatedData = $request->validate([
-            'callsign' => 'required|string|unique:aircrafts',
+            'callsign' => 'required|string',
             'type' => 'required|string',
             'load' => 'required|digits_between:0,10000'
         ]);
@@ -136,7 +138,7 @@ class AircraftController extends Controller
             [
                 'title' => 'Aircraft',
                 'text' => 'Do you really want to remove '.$aircraft->callsign.'?',
-                'delete_link' => action('AircraftController@destroy', ['id' => $aircraft->id]),
+                'delete_link' => action('AircraftController@destroy', ['aircraft' => $aircraft->id]),
                 'back_link' => action('AircraftController@index')
             ]);
     }

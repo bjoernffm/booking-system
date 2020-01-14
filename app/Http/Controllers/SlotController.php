@@ -16,10 +16,9 @@ class SlotController extends Controller
     public function index()
     {
         $slots = DB::table('slots')
-            ->leftJoin('aircrafts', 'slots.aircraft', '=', 'aircrafts.id')
-            ->leftJoin('users', 'slots.pilot', '=', 'users.id')
+            ->leftJoin('aircrafts', 'slots.aircraft_id', '=', 'aircrafts.id')
+            ->leftJoin('users', 'slots.pilot_id', '=', 'users.id')
             ->leftJoin('aircraft_types', 'aircrafts.type', '=', 'aircraft_types.id')
-            ->leftJoin('bookings', 'slots.id', '=', 'bookings.slot')
             ->select(
                 'slots.*',
                 'users.id as pilot_id',
@@ -28,8 +27,7 @@ class SlotController extends Controller
                 'aircrafts.id as aircraft_id',
                 'aircrafts.callsign as aircraft_callsign',
                 'aircrafts.load as aircraft_load',
-                'aircraft_types.designator as aircraft_designator',
-                'bookings.id as booking_id'
+                'aircraft_types.designator as aircraft_designator'
             )->orderBy('starts_on', 'asc')
             ->get();
 
@@ -43,7 +41,26 @@ class SlotController extends Controller
      */
     public function create()
     {
-        //
+        $aircrafts = DB::table('aircrafts')
+            ->leftJoin('aircraft_types', 'aircrafts.type', '=', 'aircraft_types.id')
+            ->select(
+                'aircrafts.*',
+                'aircraft_types.manufacturer',
+                'aircraft_types.model',
+                'aircraft_types.designator',
+                'aircraft_types.description',
+                'aircraft_types.engine_count',
+                'aircraft_types.engine_type'
+            )
+            ->whereNull('deleted_at')
+            ->orderBy('callsign', 'asc')
+            ->get();
+
+        $pilots = DB::table('users')
+            ->whereNull('deleted_at')
+            ->get();
+
+        return view('slots/create', ['title' => 'Slot', 'aircrafts' => $aircrafts, 'pilots' => $pilots]);
     }
 
     /**
@@ -54,7 +71,24 @@ class SlotController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'starts_on' => 'required|date',
+            'ends_on' => 'required|date',
+            'aircraft_id' => 'required|exists:aircrafts,id',
+            'pilot_id' => 'required|exists:users,id'
+        ]);
+
+        $validatedData['starts_on'] = \Carbon\Carbon::parse($validatedData['starts_on'], 'Europe/Berlin')->setTimezone('UTC')->format('Y-m-d H:i');
+        $validatedData['ends_on'] = \Carbon\Carbon::parse($validatedData['ends_on'], 'Europe/Berlin')->setTimezone('UTC')->format('Y-m-d H:i');
+
+        $slot = new Slot();
+        $slot->starts_on = $validatedData['starts_on'];
+        $slot->ends_on = $validatedData['ends_on'];
+        $slot->aircraft_id = $validatedData['aircraft_id'];
+        $slot->pilot_id = $validatedData['pilot_id'];
+        $slot->save();
+
+        return redirect()->action('SlotController@index');
     }
 
     /**
@@ -76,7 +110,26 @@ class SlotController extends Controller
      */
     public function edit(Slot $slot)
     {
-        //
+        $aircrafts = DB::table('aircrafts')
+            ->leftJoin('aircraft_types', 'aircrafts.type', '=', 'aircraft_types.id')
+            ->select(
+                'aircrafts.*',
+                'aircraft_types.manufacturer',
+                'aircraft_types.model',
+                'aircraft_types.designator',
+                'aircraft_types.description',
+                'aircraft_types.engine_count',
+                'aircraft_types.engine_type'
+            )
+            ->whereNull('deleted_at')
+            ->orderBy('callsign', 'asc')
+            ->get();
+
+        $pilots = DB::table('users')
+            ->whereNull('deleted_at')
+            ->get();
+
+        return view('slots/edit', ['title' => 'Slot', 'slot' => $slot, 'aircrafts' => $aircrafts, 'pilots' => $pilots]);
     }
 
     /**
@@ -92,6 +145,26 @@ class SlotController extends Controller
     }
 
     /**
+     * Prepare to remove the specified resource from storage.
+     *
+     * @param  \App\Slot  $slot
+     * @return \Illuminate\Http\Response
+     */
+    public function prepareDestroy($id)
+    {
+        $slot = Slot::findOrFail($id);
+
+        return view(
+            'common/delete',
+            [
+                'title' => 'Slot',
+                'text' => 'Do you really want to remove this Slot?',
+                'delete_link' => action('SlotController@destroy', ['slot' => $slot->id]),
+                'back_link' => action('SlotController@index')
+            ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param  \App\Slot  $slot
@@ -99,6 +172,7 @@ class SlotController extends Controller
      */
     public function destroy(Slot $slot)
     {
-        //
+        $slot->delete();
+        return redirect()->action('BookingController@index');
     }
 }

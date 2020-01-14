@@ -16,18 +16,18 @@ class CreateBookingsTable extends Migration
         Schema::create('bookings', function (Blueprint $table) {
             $table->uuid('id');
             $table->json('passengers');
-            $table->tinyInteger('adults');
-            $table->tinyInteger('children');
+            $table->tinyInteger('regular');
+            $table->tinyInteger('discounted');
             $table->tinyInteger('small_headsets');
             $table->string('email')->nullable();
             $table->string('mobile')->nullable();
             $table->text('internal_information')->nullable();
             $table->double('price', 8, 2);
-            $table->uuid('slot');
+            $table->uuid('slot_id');
             $table->timestamps();
 
             $table->primary('id');
-            $table->foreign('slot')->references('id')->on('slots');
+            $table->foreign('slot_id')->references('id')->on('slots');
         });
     }
 

@@ -24,13 +24,13 @@
                             @foreach ($aircrafts as $aircraft)
                             <tr>
                                 <td>
-                                    <a href="{{ action('AircraftController@edit', ['id' => $aircraft->id]) }}">{{ $aircraft->callsign }}</a>
+                                    <a href="{{ action('AircraftController@edit', ['aircraft' => $aircraft->id]) }}">{{ $aircraft->callsign }}</a>
                                 </td>
                                 <td title="{{ $aircraft->manufacturer }} {{ $aircraft->model }}">{{ $aircraft->designator }}</td>
                                 <td>{{ $aircraft->engine_count }}x {{ $aircraft->engine_type }} / {{ $aircraft->description }}</td>
                                 <td>{{ $aircraft->load }} kg</td>
                                 <td>
-                                    <a href="{{ action('AircraftController@edit', ['id' => $aircraft->id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
+                                    <a href="{{ action('AircraftController@edit', ['aircraft' => $aircraft->id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
                                     <a href="{{ action('AircraftController@prepareDestroy', ['id' => $aircraft->id]) }}" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>

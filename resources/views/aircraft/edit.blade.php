@@ -17,7 +17,7 @@
                         </ul>
                     </div>
                 @endif
-                <form action="{{ action('AircraftController@update', ['id' => $aircraft->id]) }}" method="post">
+                <form action="{{ action('AircraftController@update', ['aircraft' => $aircraft->id]) }}" method="post">
                     @method('PUT')
                     @csrf
                     <div class="row">

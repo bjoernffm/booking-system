@@ -29,25 +29,33 @@
                                 <td>{{ \Carbon\Carbon::parse($slot->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl</td>
                                 <td>{{ \Carbon\Carbon::parse($slot->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl</td>
                                 <td>
-                                    <a href="{{ action('AircraftController@edit', ['id' => $slot->aircraft_id]) }}">
+                                    <a href="{{ action('AircraftController@edit', ['aircraft' => $slot->aircraft_id]) }}">
                                         {{ $slot->aircraft_callsign }} / {{ $slot->aircraft_designator }}
                                     </a>
                                 </td>
                                 <td>
-                                    <a href="{{ action('UserController@edit', ['id' => $slot->pilot_id]) }}">
+                                    <a href="{{ action('UserController@edit', ['user' => $slot->pilot_id]) }}">
                                         {{ $slot->pilot_firstname }} {{ $slot->pilot_lastname }}
                                     </a>
                                 </td>
                                 <td>
-                                    @if ($slot->booking_id != null)
-                                        <span class="badge badge-pill badge-success">Booked</span>
-                                    @else
-                                        <span class="badge badge-pill badge-info">No booking</span>
+                                    @if ($slot->status == 'available')
+                                        <span class="badge badge-pill badge-success">Available</span>
+                                    @elseif ($slot->status == 'booked')
+                                        <span class="badge badge-pill badge-info">Booked</span>
+                                    @elseif ($slot->status == 'boarding')
+                                        <span class="badge badge-pill badge-warning">Boarding</span>
+                                    @elseif ($slot->status == 'departed')
+                                        <span class="badge badge-pill badge-info">Departed</span>
+                                    @elseif ($slot->status == 'landed')
+                                        <span class="badge badge-pill badge-secondary">Landed</span>
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ action('SlotController@edit', ['id' => $slot->id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
+                                    @if ($slot->status == 'available')
+                                        <a href="{{ action('SlotController@edit', ['slot' => $slot->id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
+                                        <a href="{{ action('SlotController@prepareDestroy', ['id' => $slot->id]) }}" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach

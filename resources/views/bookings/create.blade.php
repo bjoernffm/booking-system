@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<form action="{{ action('BookingController@store') }}" method="post">
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<form action="{{ action('BookingController@store') }}" method="post" id="bookingApp">
     @csrf
     <input type="hidden" name="slot_id" value="{{ $slot->id }}">
     <div class="row">
@@ -12,10 +13,40 @@
                 </div>
                 <div class="card-body">
                     <h6>PAX</h6>
-                    <div id="paxRows"></div>
-                    <div class="row">
-                        <div class="update ml-auto mr-auto">
-                            <button type="button" id="addPaxButton" class="btn btn-primary btn-round">Add PAX</button>
+                    <div>
+                        <div class="row" v-for="(passenger, index) in passengers">
+                            <div class="col-md-4 pr-1">
+                                <div class="form-group">
+                                    <label>Firstname</label>
+                                    <input type="text" autocomplete="off" v-on:keyup="managePax" v-model="passenger.firstname" v-bind:name="'pax['+index+'][firstname]'" class="form-control" placeholder="John">
+                                </div>
+                            </div>
+                            <div class="col-md-4 pl-1">
+                                <div class="form-group">
+                                    <label>Lastname</label>
+                                    <input type="text" autocomplete="off" v-on:keyup="managePax" v-model="passenger.lastname" v-bind:name="'pax['+index+'][lastname]'" class="form-control" placeholder="Doe">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-group">
+                                    <label>Specialties</label>
+                                    <div>
+                                        <input type="checkbox" v-bind:disabled="passenger.firstname == '' && passenger.lastname == ''" v-model="passenger.child" v-bind:name="'pax['+index+'][discounted]'" value="yes">
+                                        <span style="cursor: pointer;" v-if="passenger.firstname != '' || passenger.lastname != ''" v-on:click="passenger.child = !passenger.child">Discounted</span>
+                                        <span v-if="passenger.firstname == '' && passenger.lastname == ''">Discounted</span>
+                                    </div>
+                                    <div>
+                                        <input type="checkbox" v-bind:disabled="passenger.firstname == '' && passenger.lastname == ''" v-model="passenger.small_headset" v-bind:name="'pax['+index+'][small_headset]'" value="yes">
+                                        <span style="cursor: pointer;" v-if="passenger.firstname != '' || passenger.lastname != ''" v-on:click="passenger.small_headset = !passenger.small_headset">Small Headset</span>
+                                        <span v-if="passenger.firstname == '' && passenger.lastname == ''">Small Headset</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <div class="form-group" v-if="passenger.firstname != '' || passenger.lastname != ''">
+                                    <button type="button" v-on:click="removePax(index)" style="margin: 27px 0 0 -20px;" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <h6>Other</h6>
@@ -303,6 +334,9 @@
                     <h5 class="card-title">Summary</h5>
                 </div>
                 <div class="card-body">
+                    <div class="alert alert-info" role="alert">
+                     Max. load <b>{{ $slot->aircraft_load }} KG</b>
+                    </div>
                     <dl>
                         <dt>SLOT</dt>
                         <dd style="padding-left: 20px;">
@@ -310,15 +344,115 @@
                             {{ \Carbon\Carbon::parse($slot->starts_on)->format('d.m.Y') }} {{ \Carbon\Carbon::parse($slot->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} - {{ \Carbon\Carbon::parse($slot->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl
                         </dd>
                         <dt>PAX</dt>
-                        <dd style="padding-left: 20px;" id="paxInfo">No Passengers<br />No special headsets needed</dd>
+                        <dd style="padding-left: 20px;" v-html="summary.pax"></dd>
                         <dt>Price</dt>
-                        <dd style="padding-left: 20px;"><h4 style="margin: 0;"><span id="price">0</span>,- &euro;</h4></dd>
+                        <dd style="padding-left: 20px;"><h4 style="margin: 0;">@{{ summary.price }},- &euro;</h4></dd>
                     </dl>
                     <hr />
-                    <button type="submit" id="createBookingButton" class="btn btn-primary btn-round btn-block" disabled="disabled">Create Booking</button>
+                    <button type="submit" id="createBookingButton" class="btn btn-primary btn-round btn-block" v-bind:disabled="summary.price == 0">Create Booking</button>
                 </div>
             </div>
         </div>
     </div>
 </form>
+<script>
+var app = new Vue({
+    el: '#bookingApp',
+    data: {
+        passengers: [{
+            firstname: "",
+            lastname: "",
+            child: false,
+            small_headset: false
+        }]
+    },
+    methods: {
+        managePax: function () {
+            if(this.passengers.length > 1) {
+                this.passengers = this.passengers.filter(function (el) {
+                    return (el.firstname != "" || el.lastname != "");
+                });
+            }
+
+            if (this.passengers.length == 0 || this.passengers[this.passengers.length-1].firstname != "" || this.passengers[this.passengers.length-1].lastname != "") {
+                this.passengers.push({
+                    firstname: "",
+                    lastname: "",
+                    child: false,
+                    small_headset: false
+                });
+            }
+        },
+        removePax: function (index) {
+            this.passengers.splice(index, 1);
+        }
+    },
+    computed: {
+        summary: function () {
+            let numberChildren = 0;
+            let numberAdults = 0;
+            let numberPax = 0;
+            let numberSmallHeadsets = 0;
+
+            for(let i = 0; i < this.passengers.length; i++) {
+                if (this.passengers[i].firstname != "" || this.passengers[i].lastname != "") {
+                    if (this.passengers[i].child == true) {
+                        numberChildren++;
+                    } else {
+                        numberAdults++;
+                    }
+
+                    if (this.passengers[i].small_headset == true) {
+                        numberSmallHeadsets++;
+                    }
+
+                    numberPax++;
+                }
+            }
+
+            let paxLine = "";
+            let adultLine = "";
+            let childLine = "";
+
+            if (numberPax === 0) {
+                paxLine = "No Passengers";
+            } else if (numberPax === 1) {
+                paxLine = "1 Passenger";
+            } else {
+                paxLine = numberPax+" Passengers";
+            }
+
+            if (numberPax !== numberAdults) {
+                if (numberAdults === 0) {
+                    adultLine = "<span class=\"text-danger\">No Regular?</span>";
+                } else if (numberAdults === 1) {
+                    adultLine = "1 Regular";
+                } else {
+                    adultLine = numberAdults+" Regular";
+                }
+                if (numberChildren === 1) {
+                    childLine = "1 Discounted";
+                } else {
+                    childLine = numberChildren+" Discounted";
+                }
+
+                paxLine += " ("+adultLine+", "+childLine+")"
+            }
+
+            if (numberSmallHeadsets === 0) {
+                paxLine += "<br />No special Headsets needed";
+            } else if (numberSmallHeadsets === 1) {
+                paxLine += "<br /><span class=\"text-info\">1 small Headset needed</span>";
+            } else {
+                paxLine += "<br /><span class=\"text-info\">"+numberSmallHeadsets+" small Headsets needed</span>";
+            }
+
+            return {
+                price: (numberAdults*{{ env('PRICE_ADULT') }})+(numberChildren*{{ env('PRICE_CHILD') }}),
+                pax: paxLine
+            };
+        }
+    }
+});
+</script>
 @endsection

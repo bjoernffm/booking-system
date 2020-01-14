@@ -17,13 +17,13 @@ class CreateSlotsTable extends Migration
             $table->uuid('id');
             $table->timestamp('starts_on')->nullable();
             $table->timestamp('ends_on')->nullable();
-            $table->uuid('aircraft');
-            $table->uuid('pilot');
+            $table->uuid('aircraft_id');
+            $table->uuid('pilot_id');
             $table->timestamps();
 
             $table->primary('id');
-            $table->foreign('aircraft')->references('id')->on('aircrafts');
-            $table->foreign('pilot')->references('id')->on('users');
+            $table->foreign('aircraft_id')->references('id')->on('aircrafts');
+            $table->foreign('pilot_id')->references('id')->on('users');
         });
     }
 

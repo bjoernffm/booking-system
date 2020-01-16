@@ -84,7 +84,9 @@
             <div class="card-body">
                 <ul>
                 @foreach ($user->audits as $audit)
-                    <li title="{{ stripslashes(json_encode($audit->new_values)) }}">Someone {{$audit->event}} this item at {{\Carbon\Carbon::parse($audit->created_at)->setTimezone('Europe/Berlin')->format('d.m.Y H:i')}}</li>
+                    @if($audit->user != null)
+                        <li title="{{ stripslashes(json_encode($audit->new_values)) }}">{{$audit->user->firstname}} {{$audit->user->lastname}} {{$audit->event}} this item at {{\Carbon\Carbon::parse($audit->created_at)->setTimezone('Europe/Berlin')->format('d.m.Y H:i')}}</li>
+                    @endif
                 @endforeach
                 </ul>
             </div>

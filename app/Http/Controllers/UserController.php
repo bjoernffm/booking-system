@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Rules\Mobile as MobileRule;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -46,7 +47,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        return view('users/create', ['title' => 'User']);
     }
 
     /**
@@ -57,7 +58,44 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'firstname' => 'required|string',
+            'lastname' => 'required|string',
+            'email' => 'unique:App\User,email',
+            'mobile' => ['unique:App\User,mobile', new MobileRule]
+        ]);
+
+        $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+        $number = $phoneUtil->parse($validatedData['mobile']);
+
+        $user = new User();
+
+        $user->firstname = $validatedData['firstname'];
+        $user->lastname = $validatedData['lastname'];
+        $user->email = $validatedData['email'];
+        $user->mobile = $validatedData['mobile'];
+        $user->password = Str::random(16);
+
+        $user->email_verified_at = null;
+        $user->mobile_verified_at = null;
+
+        $user->save();
+
+        $url = URL::temporarySignedRoute(
+            'verify_mobile', now()->addMinutes(30), ['user' => $user->id]
+        );
+
+        $twilio = new \Twilio\Rest\Client(env('TWILIO_ACCOUNT_SID'), env('TWILIO_AUTH_TOKEN'));
+        $message = $twilio->messages->create(
+            $user->mobile,
+            [
+                "body" => "Validation of this mobile number has been requested. Click the following link to validate:\n\n".$url,
+                "from" => "FVL Booking"
+            ]
+        );
+
+
+        return redirect()->action('UserController@index');
     }
 
     /**

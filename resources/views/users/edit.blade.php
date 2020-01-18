@@ -5,7 +5,7 @@
     <div class="col-md-8">
         <div class="card card-user">
             <div class="card-header">
-                <h4 class="card-title">Update Slot</h4>
+                <h4 class="card-title">Update User</h4>
             </div>
             <div class="card-body">
                 @if ($errors->any())
@@ -26,13 +26,13 @@
                                 <div class="col-md-6 pr-1">
                                     <div class="form-group">
                                         <label for="firstname">Firstname</label>
-                                        <input type="text" name="firstname" class="form-control" value="{{ old('firstname', $user->firstname) }}" required />
+                                        <input type="text" autocomplete="off" data-lpignore="true" name="firstname" class="form-control" value="{{ old('firstname', $user->firstname) }}" data-lpignore="true" required />
                                     </div>
                                 </div>
                                 <div class="col-md-6 pl-1">
                                     <div class="form-group">
                                         <label for="lastname">Lastname</label>
-                                        <input type="text" name="lastname" class="form-control" value="{{ old('lastname', $user->lastname) }}" required />
+                                        <input type="text" autocomplete="off" data-lpignore="true" name="lastname" class="form-control" value="{{ old('lastname', $user->lastname) }}" data-lpignore="true" required />
                                     </div>
                                 </div>
                             </div>
@@ -40,7 +40,7 @@
                                 <div class="col-md-6 pr-1">
                                     <div class="form-group">
                                         <label for="email">E-Mail</label>
-                                        <input type="email" name="email" class="form-control" value="{{ old('email', $user->email) }}" required />
+                                        <input type="email" autocomplete="off" data-lpignore="true" name="email" class="form-control" value="{{ old('email', $user->email) }}" data-lpignore="true" required />
                                         @if ($user->email_verified_at != null)
                                         <small class="form-text text-success">
                                             verified <i class="fa fa-check"></i>
@@ -51,7 +51,20 @@
                                 <div class="col-md-6 pl-1">
                                     <div class="form-group">
                                         <label for="mobile">Mobile</label>
-                                        <input type="text" name="mobile" class="form-control" value="{{ old('mobile', $user->mobile) }}" required />
+                                        <div class="row">
+                                            <div class="col-md-4 pr-1">
+                                                <select name="mobile_country" class="form-control pr-1">
+                                                    @foreach ($countryMap as $number => $countries)
+                                                        @foreach ($countries as $country)
+                                                            <option value="{{$country}}" @if(old('mobile_country', $user->parsedNumber->getCountryCode()) == $number) selected @endif>+{{$number}} ({{$country}})</option>
+                                                        @endforeach
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-8 pl-1">
+                                                <input type="phone" autocomplete="off" data-lpignore="true" name="mobile" class="form-control pl-1" placeholder="0177 123 456" value="{{ old('mobile', $user->parsedNumber->getNationalNumber()) }}" required />
+                                            </div>
+                                        </div>
                                         @if ($user->mobile_verified_at != null)
                                         <small class="form-text text-success">
                                             verified <i class="fa fa-check"></i>

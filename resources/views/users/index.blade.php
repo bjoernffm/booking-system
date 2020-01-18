@@ -8,6 +8,9 @@
                 <h4 class="card-title">Overview</h4>
             </div>
             <div class="card-body">
+                <div>
+                    <a href="{{ action('UserController@create') }}" class="btn btn-sm btn-primary pull-right">create User</a>
+                </div>
                 <div class="table-responsive">
                     <table class="table">
                         <thead class=" text-primary">
@@ -40,12 +43,15 @@
                                 </td>
                                 <td>
                                     <a href="{{ action('UserController@edit', ['user' => $user->id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
-                                    <a href="#" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
+                                    <a href="{{ action('UserController@prepareDestroy', ['id' => $user->id]) }}" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+                <div>
+                    <a href="{{ action('UserController@create') }}" class="btn btn-sm btn-primary pull-right">create User</a>
                 </div>
             </div>
         </div>

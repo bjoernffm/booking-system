@@ -9,6 +9,8 @@ use App\Mail\BookingInvoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use App\Rules\SlotAvailable as SlotAvailableRule;
+use App\Rules\Mobile as MobileRule;
 
 use BigFish\PDF417\PDF417;
 use BigFish\PDF417\Renderers\ImageRenderer;
@@ -120,26 +122,51 @@ class BookingController extends Controller
      */
     public function store(Request $request)
     {
-        $passengers = $request->input('pax');
+        $validatedData = $request->validate([
+            'pax' => 'array|required',
+            'pax.firstname' => 'string',
+            'pax.lastname' => 'string',
+            'pax.small_headset' => 'in:yes|nullable',
+            'pax.discounted' => 'in:yes|nullable',
+            'email' => 'email|nullable',
+            'mobile' => [new MobileRule, 'nullable'],
+            'internal_information' => 'string|nullable',
+            'slot_id' => [new SlotAvailableRule]
+        ]);
+
+        $passengers = $validatedData['pax'];
         array_pop($passengers);
+
+        for($i = 0; $i < count($passengers); $i++) {
+            $passengers[$i]['firstname'] = encrypt($passengers[$i]['firstname']);
+            $passengers[$i]['lastname'] = encrypt($passengers[$i]['lastname']);
+        }
 
         $booking = new Booking();
         $booking->passengers = json_encode($passengers);
         $booking->regular = 0;
         $booking->discounted = 0;
         $booking->small_headsets = 0;
-        $booking->email = $request->input('email');
-        $booking->internal_information = $request->input('internal_information');
-        $booking->slot_id = $request->input('slot_id');
+        $booking->slot_id = $validatedData['slot_id'];
 
-        $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
-        try {
-            $number = $phoneUtil->parse($request->input('mobile'), $request->input('mobile_country'));
-            $booking->mobile = $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164);
-        } catch (\libphonenumber\NumberParseException $e) {
-            //var_dump($e);
-            //abort(404);
-            $booking->mobile = $request->input('mobile');
+        if ($validatedData['email'] !== null) {
+            $booking->email = encrypt($validatedData['email']);
+        }
+
+        if ($validatedData['internal_information'] !== null) {
+            $booking->internal_information = encrypt($validatedData['internal_information']);
+        }
+
+        if ($validatedData['mobile'] !== null) {
+            $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+            try {
+                $number = $phoneUtil->parse($validatedData['mobile'], $validatedData['mobile_country']);
+                $booking->mobile = encrypt($phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164));
+            } catch (\libphonenumber\NumberParseException $e) {
+                //var_dump($e);
+                //abort(404);
+                $booking->mobile = encrypt($validatedData['mobile']);
+            }
         }
 
         foreach($passengers as $passenger) {
@@ -160,9 +187,9 @@ class BookingController extends Controller
         $booking->slot->status = 'booked';
         $booking->slot->save();
 
-        if ($booking->email !== null) {
-            Mail::to($booking->email)->bcc('b.ebbrecht@rl-3.de')->send(new BookingCreated($booking));
-            Mail::to($booking->email)->bcc('b.ebbrecht@rl-3.de')->send(new BookingInvoice($booking));
+        if ($validatedData['email'] !== null) {
+            Mail::to($validatedData['email'])->bcc('b.ebbrecht@rl-3.de')->send(new BookingCreated($booking));
+            Mail::to($validatedData['email'])->bcc('b.ebbrecht@rl-3.de')->send(new BookingInvoice($booking));
         }
 
         return redirect()->action('BookingController@index');
@@ -218,6 +245,9 @@ class BookingController extends Controller
         $booking->passengers = json_decode($booking->passengers);
         for($i = 0; $i < count($booking->passengers); $i++) {
             $booking->passengers[$i]->infoText = [];
+
+            $booking->passengers[$i]->firstname = decrypt($booking->passengers[$i]->firstname);
+            $booking->passengers[$i]->lastname = decrypt($booking->passengers[$i]->lastname);
 
             if (isset($booking->passengers[$i]->child) and $booking->passengers[$i]->child == 'yes') {
                 $booking->passengers[$i]->infoText[] = 'Child';

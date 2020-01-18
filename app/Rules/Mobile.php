@@ -35,7 +35,18 @@ class Mobile implements Rule
                 return false;
             }
         } catch (\libphonenumber\NumberParseException $e) {
-            return false;
+            try {
+                $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+                $number = $phoneUtil->parse($value, 'DE');
+
+                if ($phoneUtil->getNumberType($number) === \libphonenumber\PhoneNumberType::MOBILE) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (\libphonenumber\NumberParseException $e) {
+                return false;
+            }
         }
     }
 

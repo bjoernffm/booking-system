@@ -22,6 +22,7 @@ class UserController extends Controller
             ->select(
                 'users.*'
             )->orderBy('lastname', 'asc')
+            ->whereNull('deleted_at')
             ->get();
 
         $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
@@ -47,7 +48,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('users/create', ['title' => 'User']);
+        return view('users/create', ['title' => 'Users']);
     }
 
     /**
@@ -62,24 +63,27 @@ class UserController extends Controller
             'firstname' => 'required|string',
             'lastname' => 'required|string',
             'email' => 'unique:App\User,email',
-            'mobile' => ['unique:App\User,mobile', new MobileRule]
+            'mobile' => ['unique:App\User,mobile', new MobileRule],
+            'mobile_country' => 'required|string'
         ]);
 
         $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
-        $number = $phoneUtil->parse($validatedData['mobile']);
+        $number = $phoneUtil->parse($validatedData['mobile'], $validatedData['mobile_country']);
 
         $user = new User();
 
         $user->firstname = $validatedData['firstname'];
         $user->lastname = $validatedData['lastname'];
         $user->email = $validatedData['email'];
-        $user->mobile = $validatedData['mobile'];
+        $user->mobile = $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164);
         $user->password = Str::random(16);
 
         $user->email_verified_at = null;
         $user->mobile_verified_at = null;
 
         $user->save();
+
+        $user->sendEmailVerificationNotification();
 
         $url = URL::temporarySignedRoute(
             'verify_mobile', now()->addMinutes(30), ['user' => $user->id]
@@ -117,7 +121,17 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('users/edit', ['title' => 'User', 'user' => $user]);
+        $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+        $user->parsedNumber = $phoneUtil->parse($user->mobile);
+
+        return view(
+            'users/edit',
+            [
+                'title' => 'Users',
+                'user' => $user,
+                'countryMap' => \libphonenumber\CountryCodeToRegionCodeMap::$countryCodeToRegionCodeMap
+            ]
+        );
     }
 
     /**
@@ -148,6 +162,7 @@ class UserController extends Controller
 
         if ($oldUser->email != $validatedData['email']) {
             $user->email_verified_at = null;
+            $user->sendEmailVerificationNotification();
         }
 
         if ($oldUser->mobile != $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::INTERNATIONAL)) {
@@ -173,13 +188,33 @@ class UserController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Prepare to remove the specified resource from storage.
      *
-     * @param  \App\Aircraft  $aircraft
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Aircraft $aircraft)
+    public function prepareDestroy($id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        return view(
+            'common/delete',
+            [
+                'title' => 'Users',
+                'text' => 'Do you really want to remove this User?',
+                'delete_link' => action('UserController@destroy', ['user' => $user->id]),
+                'back_link' => action('UserController@index')
+            ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\User  $user
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy(User $user)
+    {
+        $user->delete();
+        return redirect()->action('UserController@index');
     }
 }

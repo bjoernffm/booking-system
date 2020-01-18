@@ -12,19 +12,28 @@
                     <h5 class="card-title">Details</h5>
                 </div>
                 <div class="card-body">
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <ul style="margin: 0;">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <h6>PAX</h6>
                     <div>
                         <div class="row" v-for="(passenger, index) in passengers">
                             <div class="col-md-4 pr-1">
                                 <div class="form-group">
                                     <label>Firstname</label>
-                                    <input type="text" autocomplete="off" v-on:keyup="managePax" v-model="passenger.firstname" v-bind:name="'pax['+index+'][firstname]'" class="form-control" placeholder="John">
+                                    <input type="text" autocomplete="off" data-lpignore="true" v-on:keyup="managePax" v-model="passenger.firstname" v-bind:name="'pax['+index+'][firstname]'" class="form-control" placeholder="John">
                                 </div>
                             </div>
                             <div class="col-md-4 pl-1">
                                 <div class="form-group">
                                     <label>Lastname</label>
-                                    <input type="text" autocomplete="off" v-on:keyup="managePax" v-model="passenger.lastname" v-bind:name="'pax['+index+'][lastname]'" class="form-control" placeholder="Doe">
+                                    <input type="text" autocomplete="off" data-lpignore="true" v-on:keyup="managePax" v-model="passenger.lastname" v-bind:name="'pax['+index+'][lastname]'" class="form-control" placeholder="Doe">
                                 </div>
                             </div>
                             <div class="col-md-3">
@@ -54,7 +63,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>E-Mail-Address</label>
-                                <input type="email" name="email" class="form-control" placeholder="john@doe.com" />
+                                <input type="email" name="email" autocomplete="off" data-lpignore="true" class="form-control" placeholder="john@doe.com" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -311,7 +320,7 @@
                                         </select>
                                     </div>
                                     <div class="col-md-9 pl-1">
-                                        <input type="phone" name="mobile" class="form-control  pl-1" placeholder="0177 123 456" />
+                                        <input type="phone" autocomplete="off" data-lpignore="true" name="mobile" class="form-control  pl-1" placeholder="0177 123 456" />
                                     </div>
                                 </div>
                             </div>

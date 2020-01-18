@@ -56,8 +56,8 @@ return [
     */
 
     'from' => [
-        'address' => env('MAIL_FROM_ADDRESS', 'b.ebbrecht@rl-3.de'),
-        'name' => env('MAIL_FROM_NAME', 'Björn Ebbrecht'),
+        'address' => env('MAIL_FROM_ADDRESS', 'booking@fvl-online.de'),
+        'name' => env('MAIL_FROM_NAME', 'FVL Booking'),
     ],
 
     /*

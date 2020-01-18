@@ -132,6 +132,9 @@ The above copyright notice and this permission notice shall be included in all c
                                             <span class="d-md-block">{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</span>
                                         </p>
                                     </a>
+                                    <a class="dropdown-item" href="{{ route('logout') }}"
+                                           onclick="event.preventDefault();  document.getElementById('logout-form').submit();">
+                                           Logout</a>
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                                         <a class="dropdown-item" href="#">Account</a>
                                         <a class="dropdown-item" href="{{ route('logout') }}"

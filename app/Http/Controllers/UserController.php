@@ -148,12 +148,12 @@ class UserController extends Controller
 
         if ($oldUser->email != $validatedData['email']) {
             $user->email_verified_at = null;
-            //$user->sendEmailVerificationNotification();
+            $user->sendEmailVerificationNotification();
         }
 
         if ($oldUser->mobile != $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164)) {
             $user->mobile_verified_at = null;
-            //$user->sendSmsVerificationNotification();
+            $user->sendSmsVerificationNotification();
         }
 
         $user->save();

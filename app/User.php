@@ -2,7 +2,7 @@
 
 namespace App;
 
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
@@ -14,6 +14,8 @@ class User extends Authenticatable implements Auditable
     use SoftDeletes;
     use \OwenIt\Auditing\Auditable;
     use Notifiable;
+    use MobileOwner;
+    use MustVerifyEmail;
 
     public $incrementing = false;
 
@@ -42,5 +44,6 @@ class User extends Authenticatable implements Auditable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'mobile_verified_at' => 'datetime',
     ];
 }

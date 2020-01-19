@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
 <div class="row">
     <div class="col-md-8">
         <div class="card card-user">
@@ -17,7 +18,7 @@
                         </ul>
                     </div>
                 @endif
-                <form action="{{ action('UserController@update', ['user' => $user->id]) }}" method="post">
+                <form action="{{ action('UserController@update', ['user' => $user->id]) }}" method="post" id="bookingApp">
                     @method('PUT')
                     @csrf
                     <div class="row">
@@ -40,12 +41,13 @@
                                 <div class="col-md-6 pr-1">
                                     <div class="form-group">
                                         <label for="email">E-Mail</label>
-                                        <input type="email" autocomplete="off" data-lpignore="true" name="email" class="form-control" value="{{ old('email', $user->email) }}" data-lpignore="true" required />
-                                        @if ($user->email_verified_at != null)
-                                        <small class="form-text text-success">
+                                        <input type="email" v-model="email" autocomplete="off" data-lpignore="true" name="email" class="form-control" data-lpignore="true" required />
+                                        <small v-if="showEmailVerified" class="form-text text-success">
                                             verified <i class="fa fa-check"></i>
                                         </small>
-                                        @endif
+                                        <small v-if="!showEmailVerified" class="form-text text-primary">
+                                            User will get an email for verification
+                                        </small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 pl-1">
@@ -53,23 +55,23 @@
                                         <label for="mobile">Mobile</label>
                                         <div class="row">
                                             <div class="col-md-4 pr-1">
-                                                <select name="mobile_country" class="form-control pr-1">
+                                                <select v-model="mobileCountry" class="form-control pr-1">
                                                     @foreach ($countryMap as $number => $countries)
-                                                        @foreach ($countries as $country)
-                                                            <option value="{{$country}}" @if(old('mobile_country', $user->parsedNumber->getCountryCode()) == $number) selected @endif>+{{$number}} ({{$country}})</option>
-                                                        @endforeach
+                                                        <option value="+{{$number}}">+{{$number}}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                             <div class="col-md-8 pl-1">
-                                                <input type="phone" autocomplete="off" data-lpignore="true" name="mobile" class="form-control pl-1" placeholder="0177 123 456" value="{{ old('mobile', $user->parsedNumber->getNationalNumber()) }}" required />
+                                                <input type="text" v-model="mobile" autocomplete="off" data-lpignore="true" class="form-control pl-1" placeholder="0177 123 456" required />
                                             </div>
                                         </div>
-                                        @if ($user->mobile_verified_at != null)
-                                        <small class="form-text text-success">
+                                        <small v-if="showMobileVerified" class="form-text text-success">
                                             verified <i class="fa fa-check"></i>
                                         </small>
-                                        @endif
+                                        <small v-if="!showMobileVerified" class="form-text text-primary">
+                                            User will get a sms for verification
+                                        </small>
+                                        <input type="hidden" v-model="mobileFinal" autocomplete="off" data-lpignore="true" name="mobile" class="form-control pl-1" placeholder="0177 123 456" required />
                                     </div>
                                 </div>
                             </div>
@@ -106,4 +108,38 @@
         </div>
     </div>
 </div>
+<script>
+var app = new Vue({
+    el: '#bookingApp',
+    data: {
+        email: "{{ old('email', $user->email) }}",
+        emailOriginal: "{{ old('email', $user->email) }}",
+        emailVerified: {{ ($user->hasVerifiedEmail()) ? "true" : "false" }},
+        mobileCountry: "+{{ old('mobile_country', $user->parsedNumber->getCountryCode()) }}",
+        mobileCountryOriginal: "+{{ old('mobile_country', $user->parsedNumber->getCountryCode()) }}",
+        mobile: "{{ old('mobile', $user->parsedNumber->getNationalNumber()) }}",
+        mobileOriginal: "{{ old('mobile', $user->parsedNumber->getNationalNumber()) }}",
+        mobileVerified: {{ ($user->hasVerifiedMobile()) ? "true" : "false" }}
+    },
+    computed: {
+        showEmailVerified: function () {
+            if (this.emailVerified == true && this.email == this.emailOriginal) {
+                return true;
+            } else {
+                return false;
+            }
+        },
+        showMobileVerified: function () {
+            if (this.mobileVerified == true && this.mobileCountry == this.mobileCountryOriginal && this.mobile == this.mobileOriginal) {
+                return true;
+            } else {
+                return false;
+            }
+        },
+        mobileFinal: function () {
+            return this.mobileCountry + this.mobile;
+        }
+    }
+});
+</script>
 @endsection

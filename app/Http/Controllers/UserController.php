@@ -6,7 +6,6 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Rules\Mobile as MobileRule;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -84,20 +83,7 @@ class UserController extends Controller
         $user->save();
 
         $user->sendEmailVerificationNotification();
-
-        $url = URL::temporarySignedRoute(
-            'verify_mobile', now()->addMinutes(30), ['user' => $user->id]
-        );
-
-        $twilio = new \Twilio\Rest\Client(env('TWILIO_ACCOUNT_SID'), env('TWILIO_AUTH_TOKEN'));
-        $message = $twilio->messages->create(
-            $user->mobile,
-            [
-                "body" => "Validation of this mobile number has been requested. Click the following link to validate:\n\n".$url,
-                "from" => "FVL Booking"
-            ]
-        );
-
+        $user->sendSmsVerificationNotification();
 
         return redirect()->action('UserController@index');
     }
@@ -158,28 +144,16 @@ class UserController extends Controller
         $user->firstname = $validatedData['firstname'];
         $user->lastname = $validatedData['lastname'];
         $user->email = $validatedData['email'];
-        $user->mobile = $validatedData['mobile'];
+        $user->mobile = $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164);
 
         if ($oldUser->email != $validatedData['email']) {
             $user->email_verified_at = null;
-            $user->sendEmailVerificationNotification();
+            //$user->sendEmailVerificationNotification();
         }
 
-        if ($oldUser->mobile != $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::INTERNATIONAL)) {
+        if ($oldUser->mobile != $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164)) {
             $user->mobile_verified_at = null;
-
-            $url = URL::temporarySignedRoute(
-                'verify_mobile', now()->addMinutes(30), ['user' => $user->id]
-            );
-
-            $twilio = new \Twilio\Rest\Client(env('TWILIO_ACCOUNT_SID'), env('TWILIO_AUTH_TOKEN'));
-            $message = $twilio->messages->create(
-                $user->mobile,
-                [
-                    "body" => "Validation of this mobile number has been requested. Click the following link to validate:\n\n".$url,
-                    "from" => "FVL Booking"
-                ]
-            );
+            //$user->sendSmsVerificationNotification();
         }
 
         $user->save();

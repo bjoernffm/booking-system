@@ -10,12 +10,13 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class User extends Authenticatable implements Auditable
 {
-    use Uuids;
-    use SoftDeletes;
-    use \OwenIt\Auditing\Auditable;
-    use Notifiable;
-    use MobileOwner;
-    use MustVerifyEmail;
+    use Uuids,
+        SoftDeletes,
+        \OwenIt\Auditing\Auditable,
+        Notifiable,
+        MobileOwner,
+        MustVerifyEmail,
+        HasApiTokens;
 
     public $incrementing = false;
 

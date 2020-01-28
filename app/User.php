@@ -2,14 +2,21 @@
 
 namespace App;
 
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Notifications\Notifiable;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class User extends Authenticatable
+class User extends Authenticatable implements Auditable
 {
-    use Uuids;
-    use Notifiable;
+    use Uuids,
+        SoftDeletes,
+        \OwenIt\Auditing\Auditable,
+        Notifiable,
+        MobileOwner,
+        MustVerifyEmail,
+        HasApiTokens;
 
     public $incrementing = false;
 
@@ -38,11 +45,6 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'mobile_verified_at' => 'datetime',
     ];
-
-    public function routeNotificationForTwilio()
-    {
-        //return $this->mobile;
-        return '+4915901054183';
-    }
 }

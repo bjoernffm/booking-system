@@ -6,7 +6,6 @@ use App\User;
 use App\Notifications\SmsVerification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Twilio\Rest\Client;
 use Firebase\JWT\JWT;
 
 class ApiUserController extends Controller
@@ -32,7 +31,7 @@ class ApiUserController extends Controller
         $jwt = JWT::encode($token, env('APP_KEY'));
         $url = url('jwt_gate/'.$jwt);
 
-        $twilio = new Client(env('TWILIO_ACCOUNT_SID'), env('TWILIO_AUTH_TOKEN'));
+        $twilio = new \Twilio\Rest\Client(env('TWILIO_ACCOUNT_SID'), env('TWILIO_AUTH_TOKEN'));
 
         $message = $twilio->messages->create(
             $user->mobile,

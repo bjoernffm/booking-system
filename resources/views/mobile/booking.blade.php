@@ -34,9 +34,27 @@
                     {{ $booking->aircraft_callsign }} / {{ $booking->aircraft_designator }} / {{ $booking->pilot_firstname }} {{ $booking->pilot_lastname }}<br />
                     {{ \Carbon\Carbon::parse($booking->starts_on)->format('d.m.Y') }} {{ \Carbon\Carbon::parse($booking->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl
                 </dd>
+                <dt class="col-sm-3">STATUS</dt>
+                <dd class="col-sm-9">
+                    @if ($booking->status == 'available')
+                        <span class="badge badge-pill badge-success">Available</span>
+                    @elseif ($booking->status == 'booked')
+                        <span class="badge badge-pill badge-info">Booked</span>
+                    @elseif ($booking->status == 'boarding')
+                        <span class="badge badge-pill badge-warning">Boarding</span>
+                    @elseif ($booking->status == 'departed')
+                        <span class="badge badge-pill badge-info">Departed</span>
+                    @elseif ($booking->status == 'landed')
+                        <span class="badge badge-pill badge-secondary">Landed</span>
+                    @endif
+                </dd>
                 <dt class="col-sm-3">PAX</dt>
                 <dd class="col-sm-9">
-                    2 Passengers
+                    @if(count($booking->passengers) == 1)
+                         1 Passenger
+                    @else
+                         {{ count($booking->passengers) }} Passengers
+                    @endif
                     <ul>
                         @foreach ($booking->passengers as $passenger)
                             <li>
@@ -55,6 +73,10 @@
                 <a href="tel:{{ $booking->pilot_mobile }}" class="btn btn-primary btn-lg btn-block" style="padding: 15px 0;">Contact Pilot</a>
             @endif
             <a href="tel:+491774147290" class="btn btn-info btn-lg btn-block" style="padding: 15px 0;">Contact Booking</a>
+
+            @if ($booking->mobile !== null)
+                <a href="tel:{{ $booking->mobile }}" class="btn btn-dark btn-lg btn-block" style="padding: 15px 0;">Contact Pax</a>
+            @endif
         </div>
     </body>
 </html>

@@ -53,10 +53,9 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <a href="{{ action('BookingController@show', ['booking' => $slot->booking_id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
-                                    @if ($slot->status == 'available')
-                                        <a href="{{ action('BookingController@prepareDestroy', ['id' => $slot->booking_id]) }}" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
-                                    @endif
+                                    <a href="{{ action('BookingController@edit', ['booking' => $slot->booking_id]) }}" class="btn btn-sm btn-outline-primary btn-round btn-icon"><i class="fa fa-pencil"></i></a>
+                                    <a href="{{ action('BookingController@show', ['booking' => $slot->booking_id]) }}" class="btn btn-sm btn-outline-warning btn-round btn-icon"><i class="fa fa-barcode"></i></a>
+                                    <a href="{{ action('BookingController@prepareDestroy', ['id' => $slot->booking_id]) }}" class="btn btn-sm btn-outline-danger btn-round btn-icon"><i class="fa fa-trash"></i></a>
                                 </td>
                             </tr>
                             @endforeach

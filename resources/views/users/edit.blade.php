@@ -71,7 +71,7 @@
                                         <small v-if="!showMobileVerified" class="form-text text-primary">
                                             User will get a sms for verification
                                         </small>
-                                        <input type="hidden" v-model="mobileFinal" autocomplete="off" data-lpignore="true" name="mobile" class="form-control pl-1" placeholder="0177 123 456" required />
+                                        <input type="hidden" v-model="mobileFinal" autocomplete="off" data-lpignore="true" name="mobile" class="form-control pl-1" required />
                                     </div>
                                 </div>
                             </div>

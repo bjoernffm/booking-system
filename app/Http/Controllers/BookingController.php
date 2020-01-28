@@ -110,7 +110,8 @@ class BookingController extends Controller
             'bookings/create',
             [
                 'title' => 'Add Booking',
-                'slot' => $slot
+                'slot' => $slot,
+                'countryMap' => \libphonenumber\CountryCodeToRegionCodeMap::$countryCodeToRegionCodeMap
             ]);
     }
 
@@ -130,6 +131,7 @@ class BookingController extends Controller
             'pax.discounted' => 'in:yes|nullable',
             'email' => 'email|nullable',
             'mobile' => [new MobileRule, 'nullable'],
+            'mobile_country' => 'string|nullable',
             'internal_information' => 'string|nullable',
             'slot_id' => [new SlotAvailableRule]
         ]);
@@ -160,7 +162,7 @@ class BookingController extends Controller
         if ($validatedData['mobile'] !== null) {
             $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
             try {
-                $number = $phoneUtil->parse($validatedData['mobile'], $validatedData['mobile_country']);
+                $number = $phoneUtil->parse($validatedData['mobile_country'].$validatedData['mobile']);
                 $booking->mobile = encrypt($phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164));
             } catch (\libphonenumber\NumberParseException $e) {
                 //var_dump($e);
@@ -259,6 +261,14 @@ class BookingController extends Controller
             $booking->passengers[$i]->infoText = implode(', ', $booking->passengers[$i]->infoText);
         }
 
+        if ($booking->mobile !== null) {
+            $booking->mobile = decrypt($booking->mobile);
+        }
+
+        if ($booking->internal_information !== null) {
+            $booking->internal_information = decrypt($booking->internal_information);
+        }
+
         return view('mobile/booking', ['title' => 'Add Booking', 'booking' => $booking]);
     }
 
@@ -304,7 +314,64 @@ class BookingController extends Controller
      */
     public function edit(Booking $booking)
     {
-        //
+        $bookingResult = DB::table('bookings')
+            ->leftJoin('slots', 'bookings.slot_id', '=', 'slots.id')
+            ->leftJoin('aircrafts', 'slots.aircraft_id', '=', 'aircrafts.id')
+            ->leftJoin('users', 'slots.pilot_id', '=', 'users.id')
+            ->leftJoin('aircraft_types', 'aircrafts.type', '=', 'aircraft_types.id')
+            ->select(
+                'bookings.*',
+                'slots.starts_on as starts_on',
+                'slots.ends_on as ends_on',
+                'users.id as pilot_id',
+                'users.firstname as pilot_firstname',
+                'users.lastname as pilot_lastname',
+                'aircrafts.id as aircraft_id',
+                'aircrafts.callsign as aircraft_callsign',
+                'aircrafts.load as aircraft_load',
+                'aircraft_types.designator as aircraft_designator'
+            )
+            ->where('bookings.id', $booking->id)
+            ->first();
+
+        if ($bookingResult === null) {
+            abort(404);
+        }
+
+        $bookingResult->passengers = json_decode($bookingResult->passengers);
+        for($i = 0; $i < count($bookingResult->passengers); $i++) {
+            $bookingResult->passengers[$i]->firstname = decrypt($bookingResult->passengers[$i]->firstname);
+            $bookingResult->passengers[$i]->lastname = decrypt($bookingResult->passengers[$i]->lastname);
+        }
+        $bookingResult->passengers = json_encode($bookingResult->passengers);
+
+        if ($bookingResult->email !== null) {
+            $bookingResult->email = decrypt($bookingResult->email);
+        }
+
+        if ($bookingResult->mobile !== null) {
+            $bookingResult->mobile = decrypt($bookingResult->mobile);
+            $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
+
+            $parsedNumber = $phoneUtil->parse($bookingResult->mobile);
+            $bookingResult->parsedNumberNational = $parsedNumber->getNationalNumber();
+            $bookingResult->parsedNumberCountryCode = $parsedNumber->getCountryCode();
+        } else {
+            $bookingResult->parsedNumberNational = "";
+            $bookingResult->parsedNumberCountryCode = "+49";
+        }
+
+        if ($bookingResult->internal_information !== null) {
+            $bookingResult->internal_information = decrypt($bookingResult->internal_information);
+        }
+
+        return view(
+            'bookings/edit',
+            [
+                'title' => 'Bookings',
+                'booking' => $bookingResult,
+                'countryMap' => \libphonenumber\CountryCodeToRegionCodeMap::$countryCodeToRegionCodeMap
+            ]);
     }
 
     /**
@@ -332,7 +399,7 @@ class BookingController extends Controller
         return view(
             'common/delete',
             [
-                'title' => 'Booking',
+                'title' => 'Bookings',
                 'text' => 'Do you really want to remove this Booking?',
                 'delete_link' => action('BookingController@destroy', ['booking' => $booking->id]),
                 'back_link' => action('BookingController@index')

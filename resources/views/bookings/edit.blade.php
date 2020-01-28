@@ -2,9 +2,8 @@
 
 @section('content')
 <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
-<form action="{{ action('BookingController@store') }}" method="post" id="bookingApp">
+<form action="{{ action('BookingController@update', ['booking' => $booking->id]) }}" method="post" id="bookingApp">
     @csrf
-    <input type="hidden" name="slot_id" value="{{ $slot->id }}">
     <div class="row">
         <div class="col-md-8">
             <div class="card card-user">
@@ -63,7 +62,7 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label>E-Mail-Address</label>
-                                <input type="email" name="email" autocomplete="off" data-lpignore="true" class="form-control" value="{{ old('email') }}" placeholder="john@doe.com" />
+                                <input type="email" name="email" autocomplete="off" data-lpignore="true" class="form-control" value="{{ $booking->email }}" placeholder="john@doe.com" />
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -73,13 +72,17 @@
                                     <div class="col-md-3 pr-1">
                                         <select name="mobile_country" class="form-control pr-1">
                                             @foreach ($countryMap as $number => $countries)
-                                                <option value="+{{$number}}" @if(old('mobile_country', '+49') == '+'.$number) selected @endif>+{{$number}}</option>
+                                                <option value="+{{$number}}"
+                                                    @if($booking->parsedNumberCountryCode == '+'.$number)
+                                                        selected
+                                                    @endif>+{{$number}}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="col-md-9 pl-1">
-                                        <input type="phone" value="{{ old('mobile') }}" autocomplete="off" data-lpignore="true" name="mobile" class="form-control  pl-1" placeholder="0177 123 456" />
+                                        <input type="text" value="{{ $booking->parsedNumberNational }}" autocomplete="off" data-lpignore="true" name="mobile" class="form-control  pl-1" placeholder="0177 123 456" />
                                     </div>
+                                    <input type="hidden" v-model="mobileFinal" autocomplete="off" data-lpignore="true" name="mobile" class="form-control pl-1" required />
                                 </div>
                             </div>
                         </div>
@@ -88,7 +91,7 @@
                         <div class="col-md-12">
                             <div class="form-group">
                                 <label>Internal Information</label>
-                                <textarea name="internal_information" class="form-control textarea">{{ old('internal_information') }}</textarea>
+                                <textarea name="internal_information" class="form-control textarea">{{ $booking->internal_information }}</textarea>
                             </div>
                         </div>
                     </div>
@@ -102,13 +105,13 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info" role="alert">
-                     Max. load <b>{{ $slot->aircraft_load }} KG</b>
+                     Max. load <b>{{ $booking->aircraft_load }} KG</b>
                     </div>
                     <dl>
                         <dt>SLOT</dt>
                         <dd style="padding-left: 20px;">
-                            {{ $slot->aircraft_callsign }} / {{ $slot->aircraft_designator }} / {{ $slot->pilot_firstname }} {{ $slot->pilot_lastname }}<br />
-                            {{ \Carbon\Carbon::parse($slot->starts_on)->format('d.m.Y') }} {{ \Carbon\Carbon::parse($slot->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} - {{ \Carbon\Carbon::parse($slot->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl
+                            {{ $booking->aircraft_callsign }} / {{ $booking->aircraft_designator }} / {{ $booking->pilot_firstname }} {{ $booking->pilot_lastname }}<br />
+                            {{ \Carbon\Carbon::parse($booking->starts_on)->format('d.m.Y') }} {{ \Carbon\Carbon::parse($booking->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl
                         </dd>
                         <dt>PAX</dt>
                         <dd style="padding-left: 20px;" v-html="summary.pax"></dd>
@@ -116,7 +119,7 @@
                         <dd style="padding-left: 20px;"><h4 style="margin: 0;">@{{ summary.price }},- &euro;</h4></dd>
                     </dl>
                     <hr />
-                    <button type="submit" id="createBookingButton" class="btn btn-primary btn-round btn-block" v-bind:disabled="summary.price == 0">Create Booking</button>
+                    <button type="submit" id="updateBookingButton" class="btn btn-primary btn-round btn-block" v-bind:disabled="summary.price == 0">Update Booking</button>
                 </div>
             </div>
         </div>
@@ -124,13 +127,7 @@
 </form>
 <script>
 
-let oldPax = {!! json_encode(old('pax')) !!};
-let passengerData = [{
-    firstname: "",
-    lastname: "",
-    discounted: false,
-    small_headset: false
-}];
+let oldPax = {!! $booking->passengers !!};
 
 if (oldPax !== null) {
     for(let i = 0; i < oldPax.length; i++) {
@@ -156,6 +153,13 @@ if (oldPax !== null) {
     }
     passengerData = oldPax;
 }
+
+passengerData.push({
+    firstname: "",
+    lastname: "",
+    discounted: false,
+    small_headset: false
+});
 
 let app = new Vue({
     el: '#bookingApp',

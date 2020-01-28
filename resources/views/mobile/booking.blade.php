@@ -73,6 +73,10 @@
                 <a href="tel:{{ $booking->pilot_mobile }}" class="btn btn-primary btn-lg btn-block" style="padding: 15px 0;">Contact Pilot</a>
             @endif
             <a href="tel:+491774147290" class="btn btn-info btn-lg btn-block" style="padding: 15px 0;">Contact Booking</a>
+
+            @if ($booking->mobile !== null)
+                <a href="tel:{{ $booking->mobile }}" class="btn btn-dark btn-lg btn-block" style="padding: 15px 0;">Contact Pax</a>
+            @endif
         </div>
     </body>
 </html>

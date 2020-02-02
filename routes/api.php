@@ -18,3 +18,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::post('/users/{id}/sms_verification', 'ApiUserController@createSmsVerification');
+Route::resource('slots', 'ApiSlotController')->middleware('auth:api');

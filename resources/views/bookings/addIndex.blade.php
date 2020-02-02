@@ -1,14 +1,64 @@
 @extends('layouts.app')
 
 @section('content')
+<style>
+.spinner {
+  margin: 100px auto 0;
+  width: 70px;
+  text-align: center;
+}
+
+.spinner > div {
+  width: 18px;
+  height: 18px;
+  background-color: #333;
+
+  border-radius: 100%;
+  display: inline-block;
+  -webkit-animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+  animation: sk-bouncedelay 1.4s infinite ease-in-out both;
+}
+
+.spinner .bounce1 {
+  -webkit-animation-delay: -0.32s;
+  animation-delay: -0.32s;
+}
+
+.spinner .bounce2 {
+  -webkit-animation-delay: -0.16s;
+  animation-delay: -0.16s;
+}
+
+@-webkit-keyframes sk-bouncedelay {
+  0%, 80%, 100% { -webkit-transform: scale(0) }
+  40% { -webkit-transform: scale(1.0) }
+}
+
+@keyframes sk-bouncedelay {
+  0%, 80%, 100% {
+    -webkit-transform: scale(0);
+    transform: scale(0);
+  } 40% {
+    -webkit-transform: scale(1.0);
+    transform: scale(1.0);
+  }
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
 <div class="row">
     <div class="col-md-12">
         <div class="card card-user">
             <div class="card-header">
                 <h4 class="card-title">Open Slots</h4>
             </div>
-            <div class="card-body" id="test" style="min-height: 0;">
+
+
+            <div class="spinner" id="spinner">
+                <div class="bounce1"></div>
+                <div class="bounce2"></div>
+                <div class="bounce3"></div>
             </div>
+            <div class="card-body" id="test" style="min-height: 0;"></div>
         </div>
     </div>
 </div>
@@ -87,114 +137,21 @@
 </style>
 @endsection
 @section('javascript')
+
+let bookingUrl = "{{ action('BookingController@create') }}";
+let options = { hour:"2-digit", minute:"2-digit" };
+
 // initialize SVG.js
 var draw = SVG().addTo('#test').size('100%', '100%');
 
+let spinnerElement = document.getElementById("spinner");
 
+axios.get('/booking-system/api/slots')
+    .then(response => {
 
-let data = [{
-    "callsign": "DEDRP (190kg)",
-    "slots": [
-        {
-            "id": "1",
-            "status": "landed",
-            "starts_on": "2020-01-13T16:50:00Z",
-            "ends_on": "2020-01-13T17:10:00Z"
-        },
-        {
-            "id": "2",
-            "status": "departed",
-            "starts_on": "2020-01-13T17:20:00Z",
-            "ends_on": "2020-01-13T17:40:00Z"
-        },
-        {
-            "id": "3",
-            "status": "boarding",
-            "starts_on": "2020-01-13T17:50:00Z",
-            "ends_on": "2020-01-13T18:10:00Z"
-        },
-        {
-            "id": "4",
-            "status": "booked",
-            "starts_on": "2020-01-13T18:20:00Z",
-            "ends_on": "2020-01-13T18:40:00Z"
-        },
-        {
-            "id": "5",
-            "status": "available",
-            "starts_on": "2020-01-13T18:50:00Z",
-            "ends_on": "2020-01-13T19:10:00Z"
-        }
-    ]
-}, {
-    "callsign": "DELZC (220kg)",
-    "slots": [
-        {
-            "id": "1",
-            "status": "landed",
-            "starts_on": "2020-01-13T17:00:00Z",
-            "ends_on": "2020-01-13T17:20:00Z"
-        },
-        {
-            "id": "2",
-            "status": "departed",
-            "starts_on": "2020-01-13T17:30:00Z",
-            "ends_on": "2020-01-13T17:50:00Z"
-        },
-        {
-            "id": "3",
-            "status": "boarding",
-            "starts_on": "2020-01-13T18:00:00Z",
-            "ends_on": "2020-01-13T18:20:00Z"
-        },
-        {
-            "id": "4",
-            "status": "booked",
-            "starts_on": "2020-01-13T18:30:00Z",
-            "ends_on": "2020-01-13T18:50:00Z"
-        },
-        {
-            "id": "5",
-            "status": "available",
-            "starts_on": "2020-01-13T19:00:00Z",
-            "ends_on": "2020-01-13T19:20:00Z"
-        }
-    ]
-}, {
-    "callsign": "DEFVC (180kg)",
-    "slots": [
-        {
-            "id": "1",
-            "status": "landed",
-            "starts_on": "2020-01-13T17:10:00Z",
-            "ends_on": "2020-01-13T17:30:00Z"
-        },
-        {
-            "id": "2",
-            "status": "departed",
-            "starts_on": "2020-01-13T17:40:00Z",
-            "ends_on": "2020-01-13T18:00:00Z"
-        },
-        {
-            "id": "3",
-            "status": "boarding",
-            "starts_on": "2020-01-13T18:10:00Z",
-            "ends_on": "2020-01-13T18:30:00Z"
-        },
-        {
-            "id": "4",
-            "status": "booked",
-            "starts_on": "2020-01-13T18:40:00Z",
-            "ends_on": "2020-01-13T19:00:00Z"
-        },
-        {
-            "id": "5",
-            "status": "available",
-            "starts_on": "2020-01-13T19:10:00Z",
-            "ends_on": "2020-01-13T19:30:00Z"
-        }
-    ]
-}];
+spinnerElement.style.display = "none";
+
+let data = response.data;
 
 let gradientWhite = draw.gradient('linear', function(add) {
   add.stop({ offset: 0.6, color: '#fff', opacity: 1 })
@@ -209,7 +166,7 @@ let gradient = draw.gradient('linear', function(add) {
 let y = 20;
 for(let i = 0; i < data.length; i++) {
     if (i%2 == 0) {
-        draw.rect("100%", 30).move(0, y+(i*30)).addClass('row');
+        draw.rect("100%", 30).move(0, y+(i*30)+20).addClass('row');
     }
 }
 
@@ -221,11 +178,10 @@ for(let i = 1; i < 48; i++) {
         hour = "0"+hour;
     }
     group.line(i*150, 0, i*150, 150).stroke({ color: '#ddd', width: 1, linecap: 'round' });
-    group.text(hour+" local").move((i*150)+5, 10).font({
+    group.plain(hour+" local").move((i*150)+5, 20).font({
       family:   'Arial',
       size:     10,
       anchor:   'left',
-      leading:  '1.0em',
       fill: '#000'
     });
 }
@@ -241,10 +197,12 @@ for(let i = 0; i < data.length; i++) {
         let itemOffset = (start.getTime()%86400000)/86400000;
         let itemDuration = (((end-start)/1000)/3600);
 
-        let el = group.rect(itemDuration*150, 20).radius(4).move((itemOffset*24*150+200), (y+(i*30)+5)).addClass('slot-'+slots[j].status);
+        let el = group.rect(itemDuration*150, 20).radius(4).move((itemOffset*24*150+300), (y+(i*30)+25)).addClass('slot-'+slots[j].status);
+
         if(slots[j].status == "available") {
+            el.attr('href', bookingUrl+"?slot_id="+slots[j].id);
             el.click(() => {
-                alert(slots[j].id);
+                window.location.href = bookingUrl+"?slot_id="+slots[j].id;
             });
         }
     }
@@ -263,23 +221,34 @@ setInterval(() => {
       positionX: ((offset*-24*150)+50),
       origin: 'top left'
     });
+    clock.node.textContent=(new Date()).toLocaleString("de-DE", options);
 }, 1000);
 
 draw.rect(150, 20).move(0, 0).fill(gradientWhite);
 for(let i = 0; i < callsigns.length; i++) {
     if (i % 2 == 0) {
-        draw.rect(200, 30).move(0, y+(i*30)).fill(gradient);
+        draw.rect(200, 30).move(0, y+(i*30)+20).fill(gradient);
     } else {
-        draw.rect(200, 30).move(0, y+(i*30)).fill(gradientWhite);
+        draw.rect(200, 30).move(0, y+(i*30)+20).fill(gradientWhite);
     }
-    text = draw.text(callsigns[i]).move(5, y+(i*30)).font({
+    text = draw.plain(callsigns[i]).move(5, y+(i*30)+27).font({
       family:   'Arial',
       size:     14,
       anchor:   'left',
-      leading:  '1.8em',
       fill: '#000'
     });
 }
 
 draw.line(200, 0, 200, 150).stroke({ color: '#666', width: 1.5, linecap: 'round' });
+
+//(new Date()).toLocaleString("de-DE", options)
+draw.rect(46, 18).move(177, 0).fill("#666");
+let clock = draw.plain((new Date()).toLocaleString("de-DE", options)).move(182, 1).font({
+    family:   'Arial',
+    size:     14,
+    anchor:   'center',
+    fill: '#fff'
+});
+
+    });
 @endsection

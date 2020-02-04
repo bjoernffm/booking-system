@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class ApiSlotController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -15,7 +20,7 @@ class ApiSlotController extends Controller
     public function index()
     {
         return response()->json([
-        /*[
+        [
     "callsign" => "DEDRP (190kg)",
     "slots" => [
         [
@@ -49,7 +54,7 @@ class ApiSlotController extends Controller
             "ends_on" => date('Y-m-d')."T19:10:00Z"
         ]
     ]
-], */[
+], [
     "callsign" => "DELZC (220kg)",
     "slots" => [
         [
@@ -83,7 +88,7 @@ class ApiSlotController extends Controller
             "ends_on" => date('Y-m-d')."T14:20:00Z"
         ]
     ]
-], /*[
+], [
     "callsign" => "DEFVC (180kg)",
     "slots" => [
         [
@@ -118,7 +123,7 @@ class ApiSlotController extends Controller
         ]
     ]
 ]
-*/
+
 ]);
     }
 
@@ -141,7 +146,7 @@ class ApiSlotController extends Controller
      */
     public function show(Slot $slot)
     {
-        //
+        return response()->json($slot);
     }
 
     /**
@@ -153,7 +158,14 @@ class ApiSlotController extends Controller
      */
     public function update(Request $request, Slot $slot)
     {
-        //
+        $validatedData = $request->validate([
+            'status' => 'in:available,booked,boarding,departed,landed|required'
+        ]);
+
+        $slot->status = $validatedData['status'];
+        $slot->save();
+
+        return response()->json($slot);
     }
 
     /**

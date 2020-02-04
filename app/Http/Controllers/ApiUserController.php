@@ -10,6 +10,11 @@ use Firebase\JWT\JWT;
 
 class ApiUserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
+
     public function createSmsVerification($id)
     {
         $user = User::findOrFail($id);

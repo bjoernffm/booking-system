@@ -19,6 +19,11 @@ use Twilio\Rest\Client;
 
 class BookingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -211,6 +216,7 @@ class BookingController extends Controller
             ->leftJoin('aircraft_types', 'aircrafts.type', '=', 'aircraft_types.id')
             ->leftJoin('bookings', 'slots.id', '=', 'bookings.slot_id')
             ->select(
+                'slots.id as slot_id',
                 'slots.starts_on',
                 'slots.ends_on',
                 'slots.status',

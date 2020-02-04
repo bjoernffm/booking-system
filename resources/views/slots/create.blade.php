@@ -62,7 +62,7 @@
                             <div class="row">
                                 <div class="update ml-auto mr-auto">
                                     <a href="{{ action('SlotController@index') }}" class="btn btn-default btn-round">Back</a>
-                                    <button type="submit" class="btn btn-primary btn-round">Update</button>
+                                    <button type="submit" class="btn btn-primary btn-round">Create</button>
                                 </div>
                             </div>
                         </div>

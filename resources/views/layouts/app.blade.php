@@ -193,7 +193,7 @@ The above copyright notice and this permission notice shall be included in all c
         <script src="/booking-system/assets/js/plugins/bootstrap-notify.js"></script>
         <!-- Control Center for Now Ui Dashboard: parallax effects, scripts for the example pages etc -->
         <script src="/booking-system/assets/js/paper-dashboard.js" type="text/javascript"></script>
-        <script src="/booking-system/js/app.js" type="text/javascript"></script>
+        <!--<script src="/booking-system/js/app.js" type="text/javascript"></script>-->
         <!-- Paper Dashboard DEMO methods, don't include it in your project! -->
         <script>
         $(document).ready(function() {

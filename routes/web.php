@@ -30,13 +30,15 @@ Route::resource('users', 'UserController');
 Route::resource('slots', 'SlotController');
 Route::resource('bookings', 'BookingController');
 
-Route::get('/verify/mobile/{user}', function (Request $request, $userId) {
+Route::get('/verify/mobile/{user}', function(Request $request, $userId) {
     $user = App\User::findOrFail($userId);
 
-    if($user->mobile_verified_at === null) {
-        $user->mobile_verified_at = now();
-        $user->save();
+    if($user->mobile_verified_at !== null) {
+        abort(403);
     }
+
+    $user->mobile_verified_at = now();
+    $user->save();
 
     return view(
         'mobile/alert',
@@ -47,3 +49,18 @@ Route::get('/verify/mobile/{user}', function (Request $request, $userId) {
         ]
     );
 })->name('verify_mobile')->middleware('signed');
+
+Route::get('/verify/email/{user}', function(Request $request, $userId) {
+    $user = App\User::findOrFail($userId);
+
+    if($user->email_verified_at === null) {
+        $user->mobile_verified_at = now();
+        $user->save();
+    }
+
+    if($user->password === null) {
+        //redirect
+    }
+
+    abort(403);
+})->name('verify_email')->middleware('signed');

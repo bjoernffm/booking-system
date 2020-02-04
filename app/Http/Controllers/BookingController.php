@@ -295,9 +295,7 @@ class BookingController extends Controller
         $hash = substr($hash, 0, 5);
 
         $text = 'https://192.168.178.26/booking-system/bookings/ma/'.$booking->id.'/'.$hash.'/';
-        echo '<input type="text" value="'.$text.'" />';
 
-        // Encode the data, returns a BarcodeData object
         $pdf417 = new PDF417();
         $pdf417->setSecurityLevel(4);
         $data = $pdf417->encode($text);
@@ -307,7 +305,23 @@ class BookingController extends Controller
             'ratio' => 2
         ]);
         $img = $renderer->render($data);
-        echo '<img src="'.$img->encoded.'" />';
+
+        $passengers = json_decode($booking->passengers);
+
+        for($i = 0; $i < count($passengers); $i++) {
+            $passengers[$i]->firstname = decrypt($passengers[$i]->firstname);
+            $passengers[$i]->lastname = decrypt($passengers[$i]->lastname);
+            $passengers[$i]->name = $passengers[$i]->firstname . ' ' . $passengers[$i]->lastname;
+        }
+
+        return view(
+            'bookings/print',
+            [
+                'pdf317' => $img->encoded,
+                'booking' => $booking,
+                'passengers' => $passengers
+            ]);
+
         exit();
         return $booking;
     }

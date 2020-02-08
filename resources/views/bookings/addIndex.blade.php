@@ -69,6 +69,7 @@
                 <div class="table-responsive">
                     <table class="table">
                         <thead class=" text-primary">
+                            <th>Flt. No.</th>
                             <th>Date</th>
                             <th>Start</th>
                             <th>End</th>
@@ -80,6 +81,7 @@
                         <tbody>
                             @foreach ($openSlots as $slot)
                             <tr>
+                                <td>{{ $slot->flight_number }}</td>
                                 <td>{{ \Carbon\Carbon::parse($slot->starts_on)->format('d.m.Y') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($slot->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl</td>
                                 <td>{{ \Carbon\Carbon::parse($slot->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl</td>
@@ -183,24 +185,33 @@ Vue.component("slot-strip", {
             }
 
             let callsigns = [];
+            let j = 0;
             for(let i = 0; i < this.data.length; i++) {
-                callsigns.push(this.data[i].callsign);
+                let slot = this.data[i];
 
-                let slots = this.data[i].slots;
-                for(let j = 0; j < slots.length; j++) {
-                    let start = new Date(slots[j].starts_on);
-                    let end = new Date(slots[j].ends_on);
-                    let itemOffset = (start.getTime()%86400000)/86400000;
-                    let itemDuration = (((end-start)/1000)/3600);
+                if(callsigns.length === 0 || callsigns[j-1] !== slot.aircraft.callsign+" ("+slot.aircraft.load+"kg)") {
+                    callsigns.push(slot.aircraft.callsign+" ("+slot.aircraft.load+"kg)");
+                    j++;
+                }
 
-                    let el = group.rect(itemDuration*150, 20).radius(4).move((itemOffset*24*150+300), (y+(i*30)+25)).addClass('slot-'+slots[j].status);
+                let start = new Date(slot.starts_on);
+                let end = new Date(slot.ends_on);
+                let itemOffset = (start.getTime()%86400000)/86400000;
+                let itemDuration = (((end-start)/1000)/3600);
 
-                    if(slots[j].status == "available") {
-                        //el.attr('href', bookingUrl+"?slot_id="+slots[j].id);
-                        el.click(() => {
-                            window.location.href = "https://192.168.178.26/booking-system/bookings/create?slot_id="+slots[j].id;
-                        });
-                    }
+                let el = group.rect(itemDuration*150, 20).radius(4).move((itemOffset*24*150+300), (y+((j-1)*30)+25)).addClass('slot-'+slot.status);
+                group.plain(slot.flight_number).move((itemOffset*24*150+303), (y+((j-1)*30)+25.5)).font({
+                  family:   'Arial',
+                  size:     12,
+                  anchor:   'left',
+                  fill: '#fff'
+                });
+
+                if(slot.status == "available") {
+                    //el.attr('href', bookingUrl+"?slot_id="+slot.id);
+                    el.click(() => {
+                        window.location.href = "https://192.168.178.26/booking-system/bookings/create?slot_id="+slot.id;
+                    });
                 }
             }
 
@@ -250,6 +261,16 @@ Vue.component("slot-strip", {
     mounted: function() {
         axios.get('/booking-system/api/slots')
             .then((response) => {
+                response.data.sort(function(x, y) {
+                    if (x.aircraft.callsign < y.aircraft.callsign) {
+                        return -1;
+                    }
+                    if (x.aircraft.callsign > y.aircraft.callsign) {
+                        return 1;
+                    }
+                    return 0;
+                });
+
                 this.state = "done";
                 this.data = response.data;
                 this.initStrip();

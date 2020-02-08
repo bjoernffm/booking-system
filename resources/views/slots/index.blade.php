@@ -14,6 +14,7 @@
                 <div class="table-responsive">
                     <table class="table">
                         <thead class=" text-primary">
+                            <th>Flt. No.</th>
                             <th>Date</th>
                             <th>Start</th>
                             <th>End</th>
@@ -25,6 +26,7 @@
                         <tbody>
                             @foreach ($slots as $slot)
                             <tr>
+                                <td>{{ $slot->flight_number }}</td>
                                 <td>{{ \Carbon\Carbon::parse($slot->starts_on)->format('d.m.Y') }}</td>
                                 <td>{{ \Carbon\Carbon::parse($slot->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl</td>
                                 <td>{{ \Carbon\Carbon::parse($slot->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl</td>

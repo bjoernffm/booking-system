@@ -34,6 +34,7 @@ class SlotController extends Controller
                 'aircrafts.load as aircraft_load',
                 'aircraft_types.designator as aircraft_designator'
             )->orderBy('starts_on', 'asc')
+            ->whereNull('slots.deleted_at')
             ->get();
 
         return view('slots/index', ['title' => 'Slots', 'slots' => $slots]);
@@ -146,7 +147,25 @@ class SlotController extends Controller
      */
     public function update(Request $request, Slot $slot)
     {
-        //
+        $validatedData = $request->validate([
+            'flight_number' => 'required|string',
+            'starts_on' => 'required|date',
+            'ends_on' => 'required|date',
+            'aircraft_id' => 'required|exists:aircrafts,id',
+            'pilot_id' => 'required|exists:users,id'
+        ]);
+
+        $validatedData['starts_on'] = \Carbon\Carbon::parse($validatedData['starts_on'], 'Europe/Berlin')->setTimezone('UTC')->format('Y-m-d H:i');
+        $validatedData['ends_on'] = \Carbon\Carbon::parse($validatedData['ends_on'], 'Europe/Berlin')->setTimezone('UTC')->format('Y-m-d H:i');
+
+        $slot->flight_number = strtoupper($validatedData['flight_number']);
+        $slot->starts_on = $validatedData['starts_on'];
+        $slot->ends_on = $validatedData['ends_on'];
+        $slot->aircraft_id = $validatedData['aircraft_id'];
+        $slot->pilot_id = $validatedData['pilot_id'];
+        $slot->save();
+
+        return redirect()->action('SlotController@index');
     }
 
     /**
@@ -177,6 +196,7 @@ class SlotController extends Controller
      */
     public function destroy(Slot $slot)
     {
+        $bookings = $slot->booking()->withTrashed()->delete();
         $slot->delete();
         return redirect()->action('BookingController@index');
     }

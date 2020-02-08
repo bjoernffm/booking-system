@@ -9,6 +9,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 class Slot extends Model implements Auditable
 {
     use Uuids;
+    use SoftDeletes;
     use \OwenIt\Auditing\Auditable;
 
     public $incrementing = false;

@@ -37,7 +37,7 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 pr-1">
+                                <div class="col-md-12">
                                     <div class="form-group">
                                         <label>Aircraft</label>
                                         <select name="aircraft_id" class="form-control chosen-select">
@@ -45,6 +45,14 @@
                                                 <option value="{{ $aircraft->id }}" @if (old('aircraft_id', $slot->aircraft_id) == $aircraft->id) selected @endif >{{ $aircraft->callsign }} {{ $aircraft->designator }} ({{ $aircraft->manufacturer }} {{ $aircraft->model }})</option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 pr-1">
+                                    <div class="form-group">
+                                        <label>Flight number</label>
+                                        <input type="text" name="flight_number" class="form-control" value="{{ old('flight_number', $slot->flight_number) }}" required />
                                     </div>
                                 </div>
                                 <div class="col-md-6 pl-1">

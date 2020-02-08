@@ -49,6 +49,7 @@ class BookingController extends Controller
                 'bookings.price as price'
             )->orderBy('starts_on', 'asc')
             ->whereNotNull('bookings.id')
+            ->whereNull('slots.deleted_at')
             ->whereNull('bookings.deleted_at')
             ->get();
 
@@ -77,6 +78,7 @@ class BookingController extends Controller
                 'aircraft_types.designator as aircraft_designator'
             )->orderBy('starts_on', 'asc')
             ->where('slots.status', 'available')
+            ->whereNull('slots.deleted_at')
             ->get();
 
         return view('bookings/addIndex', ['title' => 'Add Booking', 'openSlots' => $openSlots]);

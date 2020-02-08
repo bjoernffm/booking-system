@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Slot;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ApiSlotController extends Controller
 {
@@ -19,6 +20,52 @@ class ApiSlotController extends Controller
      */
     public function index()
     {
+        $slots = DB::table('slots')
+            ->leftJoin('aircrafts', 'slots.aircraft_id', '=', 'aircrafts.id')
+            ->leftJoin('users', 'slots.pilot_id', '=', 'users.id')
+            ->leftJoin('aircraft_types', 'aircrafts.type', '=', 'aircraft_types.id')
+            ->select(
+                'slots.*',
+                'users.id as pilot_id',
+                'users.firstname as pilot_firstname',
+                'users.lastname as pilot_lastname',
+                'aircrafts.id as aircraft_id',
+                'aircrafts.callsign as aircraft_callsign',
+                'aircrafts.load as aircraft_load',
+                'aircraft_types.designator as aircraft_designator'
+            )->orderBy('starts_on', 'asc')
+            ->whereNull('slots.deleted_at')
+            ->get();
+
+        $returnBuffer = [];
+        $i = 48;
+        foreach($slots as $slot) {
+            $returnBuffer[] = [
+                'id' => $slot->id,
+                'flight_number' => $slot->flight_number,
+                'status' => $slot->status,
+                'boarding_on' => date('Y-m-d').'T'.explode(' ', $slot->starts_on)[1].'Z',
+                'starts_on' => date('Y-m-d').'T'.explode(' ', $slot->starts_on)[1].'Z',
+                'ends_on' => date('Y-m-d').'T'.explode(' ', $slot->ends_on)[1].'Z',
+                'aircraft' => [
+                    'id' => $slot->aircraft_id,
+                    'callsign' => $slot->aircraft_callsign,
+                    'load' => $slot->aircraft_load,
+                    'designator' => $slot->aircraft_designator,
+                ],
+                'pilot' => [
+                    'id' => $slot->pilot_id,
+                    'firstname' => $slot->pilot_firstname,
+                    'lastname' => $slot->pilot_firstname,
+                ],
+            ];
+        }
+
+        #array_shift($returnBuffer);
+        #array_shift($returnBuffer);
+
+        return $returnBuffer;
+
         return response()->json([
         [
     "callsign" => "DEDRP (190kg)",

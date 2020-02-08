@@ -30,6 +30,13 @@ Route::resource('users', 'UserController');
 Route::resource('slots', 'SlotController');
 Route::resource('bookings', 'BookingController');
 
+
+Route::get('/board', function(Request $request) {
+    return view(
+        'board/board'
+    );
+});
+
 Route::get('/verify/mobile/{user}', function(Request $request, $userId) {
     $user = App\User::findOrFail($userId);
 

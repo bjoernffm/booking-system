@@ -37,9 +37,9 @@ The above copyright notice and this permission notice shall be included in all c
         <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700,200" rel="stylesheet" />
         <link href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" rel="stylesheet">
         <!-- CSS Files -->
-        <link href="/booking-system/assets/css/bootstrap.min.css" rel="stylesheet" />
-        <link href="/booking-system/assets/css/paper-dashboard.css?v=2.0.0" rel="stylesheet" />
-        <link href="/booking-system/css/chosen.css" rel="stylesheet" />
+        <link href="{{ env('ROOT_PATH') }}/assets/css/bootstrap.min.css" rel="stylesheet" />
+        <link href="{{ env('ROOT_PATH') }}/assets/css/paper-dashboard.css?v=2.0.0" rel="stylesheet" />
+        <link href="{{ env('ROOT_PATH') }}/css/chosen.css" rel="stylesheet" />
     </head>
 
     <body>
@@ -78,17 +78,17 @@ The above copyright notice and this permission notice shall be included in all c
             </div>
         </div>
         <!--   Core JS Files   -->
-        <script src="/booking-system/assets/js/core/jquery.min.js"></script>
-        <script src="/booking-system/assets/js/core/popper.min.js"></script>
-        <script src="/booking-system/assets/js/core/bootstrap.min.js"></script>
-        <!--<script src="/booking-system/assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>-->
+        <script src="{{ env('ROOT_PATH') }}/assets/js/core/jquery.min.js"></script>
+        <script src="{{ env('ROOT_PATH') }}/assets/js/core/popper.min.js"></script>
+        <script src="{{ env('ROOT_PATH') }}/assets/js/core/bootstrap.min.js"></script>
+        <!--<script src="{{ env('ROOT_PATH') }}/assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>-->
         <!-- Chart JS -->
-        <script src="/booking-system/assets/js/plugins/chartjs.min.js"></script>
+        <script src="{{ env('ROOT_PATH') }}/assets/js/plugins/chartjs.min.js"></script>
         <!--  Notifications Plugin    -->
-        <script src="/booking-system/assets/js/plugins/bootstrap-notify.js"></script>
+        <script src="{{ env('ROOT_PATH') }}/assets/js/plugins/bootstrap-notify.js"></script>
         <!-- Control Center for Now Ui Dashboard: parallax effects, scripts for the example pages etc -->
-        <script src="/booking-system/assets/js/paper-dashboard.js" type="text/javascript"></script>
-        <script src="/booking-system/js/app.js" type="text/javascript"></script>
+        <script src="{{ env('ROOT_PATH') }}/assets/js/paper-dashboard.js" type="text/javascript"></script>
+        <script src="{{ env('ROOT_PATH') }}/js/app.js" type="text/javascript"></script>
         <!-- Paper Dashboard DEMO methods, don't include it in your project! -->
     </body>
 </html>

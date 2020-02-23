@@ -65,21 +65,16 @@ class SlotGeneratorController extends Controller
 
             while($now < $end) {
                 $record = [
-                    'aircraft' => $aircraft,
-                    'aircraftObject' => $aircraftMap[$aircraft],
                     'flight_number' => 'FVL'.$now->setTimezone('UTC')->format('G').$counter,
                     'starts_at' => clone $now,
-                    'ends_at' => clone $now->addMinutes($data['slot_duration'])
+                    'ends_at' => clone $now->addMinutes($data['slot_duration']) ,
+                    'pilot_id' => ''
                 ];
-                $table[$i][] = $record;
-
-                $slot = new Slot();
-                $slot->flight_number = $record['flight_number'];
-                $slot->starts_on = $record['starts_at']->setTimezone('UTC')->format('Y-m-d H:i:s');
-                $slot->ends_on = $record['ends_at']->setTimezone('UTC')->format('Y-m-d H:i:s');
-                $slot->aircraft_id = $record['aircraft'];
-                $slot->pilot_id = '207089b7-5086-4c60-ac01-dc4b7de7a477';
-                #$slot->save();
+                $table[$aircraft]['slots'][] = $record;
+                $table[$aircraft]['aircraft'] = [
+                    "id" => $aircraftMap[$aircraft]->id,
+                    "name" => $aircraftMap[$aircraft]->callsign." - ".$aircraftMap[$aircraft]->aircraftType->designator." (".$aircraftMap[$aircraft]->load."kg)"
+                ];
 
                 $now->addMinutes($data['idle_time']);
                 $counter = ($counter + 17) % 100;
@@ -88,15 +83,37 @@ class SlotGeneratorController extends Controller
             $i++;
         }
 
-        $newTable = [];
-        foreach($table as $colKey => $rows) {
-            foreach($rows as $rowKey => $row) {
-                $newTable[$rowKey][$colKey] = $row;
-            }
-        }
+        $table = array_values($table);
 
         $pilots = User::all();
 
-        return view('slot_generator/step_2', ['title' => 'Slot', 'table' => $newTable, 'pilots' => $pilots]);
+        return view('slot_generator/step_2', ['title' => 'Slot', 'table' => $table, 'pilots' => $pilots]);
+    }
+
+    public function storeStep2(Request $request)
+    {
+        $validatedData = $request->validate([
+            'slots' => 'required|array'
+        ]);
+
+        $slots = array_values($validatedData['slots']);
+
+        foreach($slots as $slot) {
+            if (!isset($slot['pilot_id']) or $slot['pilot_id'] == "" or $slot['pilot_id'] == "suspend") {
+                continue;
+            }
+
+            $slotTmp = new Slot();
+            $slotTmp->starts_on = Carbon::parse($slot['starts_at'])->toArray()['formatted'];
+            $slotTmp->ends_on = Carbon::parse($slot['ends_at'])->toArray()['formatted'];
+            $slotTmp->aircraft_id = $slot['aircraft_id'];
+            $slotTmp->pilot_id = $slot['pilot_id'];
+            $slotTmp->flight_number = $slot['flight_number'];
+            $slotTmp->save();
+        }
+
+        #$request->session()->forget('slot_generator');
+
+        return redirect()->action('SlotController@index');
     }
 }

@@ -1,13 +1,13 @@
 <html>
 	<head>
 		<title>JavaScript/CSS3 Departure Board</title>
-		<link rel="stylesheet" href="/booking-system/css/board.css" />
+		<link rel="stylesheet" href="{{ env('ROOT_PATH') }}/css/board.css" />
 	</head>
 
 	<body style="background-color: #111; font-size: 22pt;">
 		<div id="test" style="top: 50px; left: 50%; position: absolute; margin-left: -527px;"></div>
 
-        <script src="/booking-system/js/board.js"></script>
+        <script src="{{ env('ROOT_PATH') }}/js/board.js"></script>
         <script src="https://momentjs.com/downloads/moment.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
 		<script>
@@ -22,7 +22,7 @@
             translations.set("landed", "gelandet");
 
             setInterval(() => {
-            axios.get('/booking-system/api/slots')
+            axios.get('{{ env('ROOT_PATH') }}/api/slots')
                 .then((response) => {
                     let slots = response.data;
                     let lines = [

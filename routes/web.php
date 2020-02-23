@@ -13,26 +13,31 @@
 
 Auth::routes(['verify' => true]);
 
-Route::get('/', 'HomeController@index')->name('home');
-//Route::get('/jwt_gate/{jwt}', 'JwtGateController@process');
+Route::group(['middleware' => ['auth', 'verifiedStatus']], function () {
+    Route::get('/', 'HomeController@index')->name('home');
 
-Route::get('/slots/generator/step_1', 'SlotGeneratorController@step1');
-Route::post('/slots/generator/step_1', 'SlotGeneratorController@storeStep1');
-Route::get('/slots/generator/step_2', 'SlotGeneratorController@step2');
+    Route::get('/slots/generator/step_1', 'SlotGeneratorController@step1');
+    Route::post('/slots/generator/step_1', 'SlotGeneratorController@storeStep1');
+    Route::get('/slots/generator/step_2', 'SlotGeneratorController@step2');
+    Route::post('/slots/generator/step_2', 'SlotGeneratorController@storeStep2');
 
-Route::get('/bookings/add', 'BookingController@addIndex');
-Route::get('/bookings/ma/{booking_id}/{hash}', 'BookingController@fastAccess');
+    Route::get('/bookings/add', 'BookingController@addIndex');
+    Route::get('/bookings/ma/{booking_id}/{hash}', 'BookingController@fastAccess');
 
-Route::resource('aircraft', 'AircraftController');
-Route::get('/aircraft/{id}/delete', 'AircraftController@prepareDestroy');
+    Route::resource('aircraft', 'AircraftController');
+    Route::get('/aircraft/{id}/delete', 'AircraftController@prepareDestroy');
 
-Route::get('/slots/{id}/delete', 'SlotController@prepareDestroy');
-Route::get('/users/{id}/delete', 'UserController@prepareDestroy');
-Route::get('/bookings/{id}/delete', 'BookingController@prepareDestroy');
+    Route::get('/slots/{id}/delete', 'SlotController@prepareDestroy');
+    Route::get('/users/{id}/delete', 'UserController@prepareDestroy');
+    Route::get('/bookings/{id}/delete', 'BookingController@prepareDestroy');
 
-Route::resource('users', 'UserController');
-Route::resource('slots', 'SlotController');
-Route::resource('bookings', 'BookingController');
+    Route::resource('users', 'UserController');
+    Route::resource('slots', 'SlotController');
+    Route::resource('bookings', 'BookingController');
+
+    Route::get('/onboarding', 'UserController@showOnboarding');
+    Route::post('/onboarding', 'UserController@setOnboarding');
+});
 
 
 Route::get('/board', function(Request $request) {
@@ -60,18 +65,3 @@ Route::get('/verify/mobile/{user}', function(Request $request, $userId) {
         ]
     );
 })->name('verify_mobile')->middleware('signed');
-
-Route::get('/verify/email/{user}', function(Request $request, $userId) {
-    $user = App\User::findOrFail($userId);
-
-    if($user->email_verified_at === null) {
-        $user->mobile_verified_at = now();
-        $user->save();
-    }
-
-    if($user->password === null) {
-        //redirect
-    }
-
-    abort(403);
-})->name('verify_email')->middleware('signed');

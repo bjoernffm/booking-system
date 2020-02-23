@@ -6,15 +6,11 @@ use App\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Rules\Mobile as MobileRule;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -80,7 +76,7 @@ class UserController extends Controller
         $user->lastname = $validatedData['lastname'];
         $user->email = $validatedData['email'];
         $user->mobile = $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164);
-        $user->password = Str::random(16);
+        $user->password = '';
 
         $user->email_verified_at = null;
         $user->mobile_verified_at = null;
@@ -195,5 +191,30 @@ class UserController extends Controller
     {
         $user->delete();
         return redirect()->action('UserController@index');
+    }
+
+    public function showOnboarding()
+    {
+        if (Auth::user()->password != "") {
+            return redirect('/');
+        }
+
+        return view(
+            'auth/passwords/set',
+            []);
+    }
+
+    public function setOnboarding(Request $request)
+    {
+        $validatedData = $request->validate([
+            'password' => 'required|string'
+        ]);
+
+        if (Auth::user()->password == "") {
+            Auth::user()->password = Hash::make($validatedData['password']);
+            Auth::user()->save();
+        }
+
+        return redirect('/');
     }
 }

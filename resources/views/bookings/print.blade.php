@@ -1,5 +1,5 @@
 <body style="margin: 0; padding: 0;">
-<script src="/booking-system/js/pdfkit.js"></script>
+<script src="{{ env('ROOT_PATH') }}/js/pdfkit.js"></script>
 <script src="https://github.com/devongovett/blob-stream/releases/download/v0.1.3/blob-stream.js"></script>
 <iframe id="iframe" src="" width="100%" height="100%" style="border: 0;"> </iframe>
 <script>

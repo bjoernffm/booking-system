@@ -213,7 +213,7 @@ Vue.component("slot-strip", {
                 if(slot.status == "available") {
                     //el.attr('href', bookingUrl+"?slot_id="+slot.id);
                     el.click(() => {
-                        window.location.href = "https://192.168.178.26/booking-system/bookings/create?slot_id="+slot.id;
+                        window.location.href = "{{ env('ROOT_PATH') }}/bookings/create?slot_id="+slot.id;
                     });
                 }
             }
@@ -262,7 +262,7 @@ Vue.component("slot-strip", {
         }
     },
     mounted: function() {
-        axios.get('/booking-system/api/slots')
+        axios.get('{{ env('ROOT_PATH') }}/api/slots')
             .then((response) => {
                 response.data.sort(function(x, y) {
                     if (x.aircraft.callsign < y.aircraft.callsign) {

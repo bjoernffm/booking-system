@@ -81,7 +81,8 @@ class SlotController extends Controller
             'starts_on' => 'required|date',
             'ends_on' => 'required|date',
             'aircraft_id' => 'required|exists:aircrafts,id',
-            'pilot_id' => 'required|exists:users,id'
+            'pilot_id' => 'required|exists:users,id',
+            'flight_number' => 'required|string',
         ]);
 
         $validatedData['starts_on'] = \Carbon\Carbon::parse($validatedData['starts_on'], 'Europe/Berlin')->setTimezone('UTC')->format('Y-m-d H:i');
@@ -92,6 +93,7 @@ class SlotController extends Controller
         $slot->ends_on = $validatedData['ends_on'];
         $slot->aircraft_id = $validatedData['aircraft_id'];
         $slot->pilot_id = $validatedData['pilot_id'];
+        $slot->flight_number = $validatedData['flight_number'];
         $slot->save();
 
         return redirect()->action('SlotController@index');

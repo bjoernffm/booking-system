@@ -133,6 +133,9 @@
 .row {
   fill: #eee;
 }
+.slot-flightnumber{
+    pointer-events: none;
+}
 </style>
 @endsection
 @section('javascript')
@@ -146,7 +149,7 @@ Vue.component("slot-strip", {
     },
     methods: {
         initStrip: function() {
-            var draw = SVG().addTo('#strip').size('100%', '100%');
+            var draw = SVG().addTo('#strip').size('100%', 300);
             let options = { hour:"2-digit", minute:"2-digit" };
 
             // define colors for later fades
@@ -201,11 +204,11 @@ Vue.component("slot-strip", {
 
                 let el = group.rect(itemDuration*150, 20).radius(4).move((itemOffset*24*150+300), (y+((j-1)*30)+25)).addClass('slot-'+slot.status);
                 group.plain(slot.flight_number).move((itemOffset*24*150+303), (y+((j-1)*30)+25.5)).font({
-                  family:   'Arial',
-                  size:     12,
-                  anchor:   'left',
-                  fill: '#fff'
-                });
+                    family: 'Arial',
+                    size: 12,
+                    anchor: 'left',
+                    fill: '#fff'
+                }).addClass("slot-flightnumber");
 
                 if(slot.status == "available") {
                     //el.attr('href', bookingUrl+"?slot_id="+slot.id);

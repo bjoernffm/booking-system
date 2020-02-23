@@ -37,7 +37,11 @@
 
                         line += slots[i].flight_number.padEnd(10, " ");
                         line += translations.get(slots[i].status).padEnd(12, " ");
-                        line += moment(slots[i].starts_on).subtract(15, "minutes").format("HH:mm");
+                        if (slots[i].status === "available" || slots[i].status === "booked" || slots[i].status === "boarding") {
+                            line += moment(slots[i].starts_on).subtract(15, "minutes").format("HH:mm");
+                        } else {
+                            line += "--:--";
+                        }
                         lines.push(line);
                     }
 

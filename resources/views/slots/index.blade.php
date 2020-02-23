@@ -9,6 +9,8 @@
             </div>
             <div class="card-body">
                 <div>
+                    <a href="{{ action('SlotGeneratorController@step1') }}" class="btn btn-sm btn-default pull-right">Slot Generator</a>
+                    &nbsp;&nbsp;
                     <a href="{{ action('SlotController@create') }}" class="btn btn-sm btn-primary pull-right">create Slot</a>
                 </div>
                 <div class="table-responsive">

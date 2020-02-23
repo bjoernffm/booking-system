@@ -16,6 +16,10 @@ Auth::routes(['verify' => true]);
 Route::get('/', 'HomeController@index')->name('home');
 //Route::get('/jwt_gate/{jwt}', 'JwtGateController@process');
 
+Route::get('/slots/generator/step_1', 'SlotGeneratorController@step1');
+Route::post('/slots/generator/step_1', 'SlotGeneratorController@storeStep1');
+Route::get('/slots/generator/step_2', 'SlotGeneratorController@step2');
+
 Route::get('/bookings/add', 'BookingController@addIndex');
 Route::get('/bookings/ma/{booking_id}/{hash}', 'BookingController@fastAccess');
 

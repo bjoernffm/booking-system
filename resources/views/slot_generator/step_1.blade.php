@@ -1,13 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-<form action="{{ action('SlotController@store') }}" method="post">
+<form action="{{ action('SlotGeneratorController@storeStep1') }}" method="post">
     <div class="row">
         <div class="col-md-2"></div>
         <div class="col-md-8">
             <div class="card card-user">
                 <div class="card-header">
-                    <h4 class="card-title">Create Slot</h4>
+                    <h4 class="card-title">Create Slots (Step 1/2)</h4>
                 </div>
                 <div class="card-body">
                     @if ($errors->any())
@@ -38,30 +38,32 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-12">
+                                <div class="col-md-4 pr-1">
                                     <div class="form-group">
-                                        <label>Aircraft</label>
-                                        <select name="aircraft_id" class="form-control chosen-select">
-                                            @foreach ($aircrafts as $aircraft)
-                                                <option value="{{ $aircraft->id }}" @if (old('aircraft_id') == $aircraft->id) selected @endif >{{ $aircraft->callsign }} - {{ $aircraft->designator }} ({{ $aircraft->manufacturer }} {{ $aircraft->model }})</option>
-                                            @endforeach
-                                        </select>
+                                        <label for="slot_duration">Slot duration (min)</label>
+                                        <input type="number" name="slot_duration" class="form-control" placeholder="20" value="{{ old('slot_duration') }}" min="1" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4 pr-1">
+                                    <div class="form-group">
+                                        <label for="idle_time">Idle time (min)</label>
+                                        <input type="number" name="idle_time" class="form-control" placeholder="25" value="{{ old('idle_time') }}" min="0" />
+                                    </div>
+                                </div>
+                                <div class="col-md-4 pl-1">
+                                    <div class="form-group">
+                                        <label for="offset">Offset (min)</label>
+                                        <input type="number" name="offset" class="form-control" placeholder="5" value="{{ old('offset') }}" min="0" />
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-6 pr-1">
+                                <div class="col-md-12">
                                     <div class="form-group">
-                                        <label>Flight number</label>
-                                        <input type="text" name="flight_number" class="form-control uppercaseInput" value="{{ old('flight_number') }}" required />
-                                    </div>
-                                </div>
-                                <div class="col-md-6 pl-1">
-                                    <div class="form-group">
-                                        <label>Pilot</label>
-                                        <select name="pilot_id" class="form-control chosen-select">
-                                            @foreach ($pilots as $pilot)
-                                                <option value="{{ $pilot->id }}" @if (old('pilot_id') == $pilot->id) selected @endif >{{ $pilot->firstname }} {{ $pilot->lastname }}</option>
+                                        <label>Aircraft</label>
+                                        <select name="aircrafts[]" class="form-control" multiple>
+                                            @foreach ($aircrafts as $aircraft)
+                                                <option value="{{ $aircraft->id }}" @if (in_array($aircraft->id, old('aircrafts', []))) selected @endif >{{ $aircraft->callsign }} ({{ $aircraft->aircraftType->manufacturer }} {{ $aircraft->aircraftType->designator }})</option>
                                             @endforeach
                                         </select>
                                     </div>

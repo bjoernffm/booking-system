@@ -34,6 +34,7 @@ class ApiSlotController extends Controller
                 'aircrafts.load as aircraft_load',
                 'aircraft_types.designator as aircraft_designator'
             )->orderBy('starts_on', 'asc')
+            ->whereRaw('(slots.status != "landed") OR (slots.status = "landed" AND slots.updated_at >= DATE_SUB(NOW(), INTERVAL 5 MINUTE))')
             ->whereNull('slots.deleted_at')
             ->get();
 

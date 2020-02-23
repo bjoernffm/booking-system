@@ -13,4 +13,12 @@ class Aircraft extends Model implements Auditable
     use \OwenIt\Auditing\Auditable;
 
     public $incrementing = false;
+
+    /**
+     * Get the aircraft record associated with the slot.
+     */
+    public function aircraftType()
+    {
+        return $this->hasOne('App\AircraftType', 'id', 'type');
+    }
 }

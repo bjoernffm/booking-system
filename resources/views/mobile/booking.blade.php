@@ -8,7 +8,7 @@
         <!-- Bootstrap CSS -->
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-        <title>{{ $booking->aircraft_callsign }} | {{ \Carbon\Carbon::parse($booking->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl</title>
+        <title></title>
         <style>
             .spinner {
               margin: 0px auto;
@@ -56,26 +56,11 @@
     <body>
         <div class="container-fluid" id="app">
             <br />
-            @if ($booking->internal_information !== null)
-                <div class="alert alert-info" role="alert">
-                  <b>Internal Information:</b><br />
-                  {{ $booking->internal_information }}
-                </div>
-            @endif
-            @if ($booking->small_headsets == 1)
-                <div class="alert alert-warning" role="alert">
-                    <b>1 small Headset</b> needed
-                </div>
-            @elseif ($booking->small_headsets > 1)
-                <div class="alert alert-warning" role="alert">
-                    <b>{{ $booking->small_headsets }} small Headsets</b> needed
-                </div>
-            @endif
             <dl class="row">
                 <dt class="col-sm-3">SLOT</dt>
                 <dd class="col-sm-9">
-                    {{ $booking->aircraft_callsign }} / {{ $booking->aircraft_designator }} / {{ $booking->pilot_firstname }} {{ $booking->pilot_lastname }}<br />
-                    {{ \Carbon\Carbon::parse($booking->starts_on)->format('d.m.Y') }} {{ \Carbon\Carbon::parse($booking->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl
+                    {{ $slot->aircraft->callsign }} / {{ $slot->aircraft->aircraftType->designator }} / {{ $slot->pilot->firstname }} {{ $slot->pilot->lastname }}<br />
+                    {{ \Carbon\Carbon::parse($slot->starts_on)->format('d.m.Y') }} {{ \Carbon\Carbon::parse($slot->starts_on)->setTimezone('Europe/Berlin')->format('H:i') }} - {{ \Carbon\Carbon::parse($slot->ends_on)->setTimezone('Europe/Berlin')->format('H:i') }} lcl
                 </dd>
                 <dt class="col-sm-3">STATUS</dt>
                 <dd class="col-sm-9">
@@ -84,24 +69,6 @@
                     <span v-if="status==='boarding'" class="badge badge-pill badge-warning">Boarding</span>
                     <span v-if="status==='departed'" class="badge badge-pill badge-info">Departed</span>
                     <span v-if="status==='departed'" class="badge badge-pill badge-secondary">Landed</span>
-                </dd>
-                <dt class="col-sm-3">PAX</dt>
-                <dd class="col-sm-9">
-                    @if(count($booking->passengers) == 1)
-                         1 Passenger
-                    @else
-                         {{ count($booking->passengers) }} Passengers
-                    @endif
-                    <ul>
-                        @foreach ($booking->passengers as $passenger)
-                            <li>
-                                {{ $passenger->firstname }} {{ $passenger->lastname }}
-                                @if ($passenger->infoText != '')
-                                    ({{ $passenger->infoText }})
-                                @endif
-                            </li>
-                        @endforeach
-                    </ul>
                 </dd>
             </dl>
             <button v-if="status=='booked'" v-on:click="set('boarding')" v-bind:disabled="loading===true" class="btn btn-success btn-lg btn-block" style="padding: 15px 0;">
@@ -125,14 +92,6 @@
                 </span>
             </button>
             <hr />
-            @if ($booking->pilot_mobile != null)
-                <a href="tel:{{ $booking->pilot_mobile }}" class="btn btn-primary btn-lg btn-block" style="padding: 15px 0;">Contact Pilot</a>
-            @endif
-            <a href="tel:+491774147290" class="btn btn-info btn-lg btn-block" style="padding: 15px 0;">Contact Booking</a>
-
-            @if ($booking->mobile !== null)
-                <a href="tel:{{ $booking->mobile }}" class="btn btn-dark btn-lg btn-block" style="padding: 15px 0;">Contact Pax</a>
-            @endif
         </div>
         <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.2/axios.min.js" integrity="sha256-T/f7Sju1ZfNNfBh7skWn0idlCBcI3RwdLSS4/I7NQKQ=" crossorigin="anonymous"></script>
@@ -140,14 +99,14 @@
             var app = new Vue({
                 el: "#app",
                 data: {
-                    status: "{{$booking->status}}",
+                    status: "{{$slot->status}}",
                     loading: false
                 },
                 methods: {
                     set: function(status) {
                         this.loading = true;
                         axios.put(
-                            "{{ action('ApiSlotController@update', ['slot' => $booking->slot_id]) }}",
+                            "{{ action('ApiSlotController@update', ['slot' => $slot->id]) }}",
                             {
                                 status
                             }

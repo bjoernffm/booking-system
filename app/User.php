@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
 use OwenIt\Auditing\Contracts\Auditable;
 use Laravel\Passport\HasApiTokens;
+use Laravel\Scout\Searchable;
 
 class User extends Authenticatable implements Auditable
 {
@@ -17,9 +18,19 @@ class User extends Authenticatable implements Auditable
         Notifiable,
         MobileOwner,
         MustVerifyEmail,
-        HasApiTokens;
+        HasApiTokens,
+        Searchable;
 
     public $incrementing = false;
+
+    public function toSearchableArray()
+    {
+        return [
+            'title' => $this->firstname.' '.$this->lastname,
+            'item' => $this->toArray(),
+            'entity' => get_class($this)
+        ];
+    }
 
     /**
      * The attributes that are mass assignable.

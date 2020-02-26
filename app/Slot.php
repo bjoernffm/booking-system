@@ -5,14 +5,25 @@ namespace App;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
+use Laravel\Scout\Searchable;
 
 class Slot extends Model implements Auditable
 {
     use Uuids;
     use SoftDeletes;
     use \OwenIt\Auditing\Auditable;
+    use Searchable;
 
     public $incrementing = false;
+
+    public function toSearchableArray()
+    {
+        return [
+            'title' => $this->flight_number,
+            'item' => $this->toArray(),
+            'entity' => get_class($this)
+        ];
+    }
 
     /**
      * Get the pilot record associated with the slot.
@@ -31,10 +42,10 @@ class Slot extends Model implements Auditable
     }
 
     /**
-     * Get the booking that owns the slot.
+     * Get the bookins for the slot.
      */
-    public function booking()
+    public function bookings()
     {
-        return $this->belongsTo('App\Booking', 'id', 'slot_id');
+        return $this->hasMany('App\Booking');
     }
 }

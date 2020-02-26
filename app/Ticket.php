@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 use Laravel\Scout\Searchable;
 
-class Booking extends Model implements Auditable
+class Ticket extends Model implements Auditable
 {
     use Uuids;
     use Shortcodes;
@@ -18,8 +18,6 @@ class Booking extends Model implements Auditable
 
     public function toSearchableArray()
     {
-        $this->tickets;
-
         return [
             'title' => $this->shortcode,
             'item' => $this->toArray(),
@@ -28,18 +26,10 @@ class Booking extends Model implements Auditable
     }
 
     /**
-     * Get the slot record associated with the booking.
+     * Get the booking record associated with the ticket.
      */
-    public function slot()
+    public function booking()
     {
-        return $this->hasOne('App\Slot', 'id', 'slot_id');
-    }
-
-    /**
-     * Get the tickets for the booking.
-     */
-    public function tickets()
-    {
-        return $this->hasMany('App\Ticket');
+        return $this->hasOne('App\Booking', 'id', 'booking_id');
     }
 }

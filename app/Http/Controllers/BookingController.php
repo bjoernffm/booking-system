@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Booking;
+use App\Ticket;
 use App\Slot;
 use App\Mail\BookingCreated;
 use App\Mail\BookingInvoice;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\Mail;
 use App\Rules\SlotAvailable as SlotAvailableRule;
 use App\Rules\Mobile as MobileRule;
 
+use Carbon\Carbon;
+
 use BigFish\PDF417\PDF417;
 use BigFish\PDF417\Renderers\ImageRenderer;
 use Firebase\JWT\JWT;
@@ -19,11 +22,6 @@ use Twilio\Rest\Client;
 
 class BookingController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Display a listing of the resource.
      *
@@ -146,53 +144,62 @@ class BookingController extends Controller
         $passengers = $validatedData['pax'];
         array_pop($passengers);
 
-        for($i = 0; $i < count($passengers); $i++) {
-            $passengers[$i]['firstname'] = encrypt($passengers[$i]['firstname']);
-            $passengers[$i]['lastname'] = encrypt($passengers[$i]['lastname']);
-        }
-
         $booking = new Booking();
-        $booking->passengers = json_encode($passengers);
+        $booking->generateShortcode();
         $booking->regular = 0;
         $booking->discounted = 0;
         $booking->small_headsets = 0;
         $booking->slot_id = $validatedData['slot_id'];
 
         if ($validatedData['email'] !== null) {
-            $booking->email = encrypt($validatedData['email']);
+            $booking->email = $validatedData['email'];
         }
 
         if ($validatedData['internal_information'] !== null) {
-            $booking->internal_information = encrypt($validatedData['internal_information']);
+            $booking->internal_information = $validatedData['internal_information'];
         }
 
         if ($validatedData['mobile'] !== null) {
             $phoneUtil = \libphonenumber\PhoneNumberUtil::getInstance();
             try {
                 $number = $phoneUtil->parse($validatedData['mobile_country'].$validatedData['mobile']);
-                $booking->mobile = encrypt($phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164));
+                $booking->mobile = $phoneUtil->format($number, \libphonenumber\PhoneNumberFormat::E164);
             } catch (\libphonenumber\NumberParseException $e) {
-                //var_dump($e);
-                //abort(404);
-                $booking->mobile = encrypt($validatedData['mobile']);
+                $booking->mobile = $validatedData['mobile'];
             }
         }
 
+        $tickets = [];
         foreach($passengers as $passenger) {
+            $ticket = new Ticket();
+            $ticket->generateShortcode();
+            $ticket->firstname = $passenger['firstname'];
+            $ticket->lastname = $passenger['lastname'];
+            $ticket->small_headset = 0;
+
             if (isset($passenger['discounted']) and $passenger['discounted'] == "yes") {
                 $booking->discounted++;
+                $ticket->type = 'discounted';
+                $ticket->price = env('PRICE_CHILD');
             } else {
                 $booking->regular++;
+                $ticket->type = 'regular';
+                $ticket->price = env('PRICE_ADULT');
             }
 
             if (isset($passenger['small_headset']) and $passenger['small_headset'] == "yes") {
                 $booking->small_headsets++;
+                $ticket->small_headset = 1;
             }
+
+            $tickets[] = $ticket;
         }
 
         $booking->price = ($booking->regular*env('PRICE_ADULT')) + ($booking->discounted*env('PRICE_CHILD'));
 
         $booking->save();
+
+        $booking->tickets()->saveMany($tickets);
         $booking->slot->status = 'booked';
         $booking->slot->save();
 
@@ -210,74 +217,41 @@ class BookingController extends Controller
      * @param  \App\Booking  $booking
      * @return \Illuminate\Http\Response
      */
-    public function fastAccess($bookingId, $hash)
+    public function fastAccess($ticketId, $hash)
     {
-        $booking = DB::table('slots')
-            ->leftJoin('aircrafts', 'slots.aircraft_id', '=', 'aircrafts.id')
-            ->leftJoin('users', 'slots.pilot_id', '=', 'users.id')
-            ->leftJoin('aircraft_types', 'aircrafts.type', '=', 'aircraft_types.id')
-            ->leftJoin('bookings', 'slots.id', '=', 'bookings.slot_id')
-            ->select(
-                'slots.id as slot_id',
-                'slots.starts_on',
-                'slots.ends_on',
-                'slots.status',
-                'users.id as pilot_id',
-                'users.firstname as pilot_firstname',
-                'users.lastname as pilot_lastname',
-                'users.mobile as pilot_mobile',
-                'aircrafts.id as aircraft_id',
-                'aircrafts.callsign as aircraft_callsign',
-                'aircrafts.load as aircraft_load',
-                'aircraft_types.designator as aircraft_designator',
-                'bookings.*'
-            )->orderBy('starts_on', 'asc')
-            ->where('bookings.id', $bookingId)
-            ->whereNull('bookings.deleted_at')
-            ->first();
-
-        if ($booking === null) {
-            return view('mobile/corrupt_booking');
-        }
+        $ticket = Ticket::findOrFail($ticketId);
 
         $calculatedHash = json_encode([
-            $booking->id,
-            $booking->passengers,
-            $booking->slot_id,
+            $ticket->booking->id,
+            $ticket->id,
+            $ticket->booking->slot->id,
         ]);
         $calculatedHash = hash_hmac('sha256', $calculatedHash, env('APP_KEY'));
-        $calculatedHash = substr($calculatedHash, 0, 5);
+        $calculatedHash = substr($calculatedHash, 0, 10);
 
         if ($calculatedHash != $hash) {
             return view('mobile/corrupt_booking');
         }
 
-        $booking->passengers = json_decode($booking->passengers);
-        for($i = 0; $i < count($booking->passengers); $i++) {
-            $booking->passengers[$i]->infoText = [];
+        $slot = $ticket->booking->slot;
+        #$slot->pilot;
+        #$slot->aircraft;
+        #$slot->aircraft->aircraftType;
+        #$slot->bookings;
+        $slot->bookings->map(function($booking) {
+            $booking->tickets = $booking->tickets->map(function($ticket) {
+                $ticket->firstname = decrypt($ticket->firstname);
+                $ticket->lastname = decrypt($ticket->lastname);
+                return $ticket;
+            });
+            return $booking;
+        });
 
-            $booking->passengers[$i]->firstname = decrypt($booking->passengers[$i]->firstname);
-            $booking->passengers[$i]->lastname = decrypt($booking->passengers[$i]->lastname);
+        return $slot->bookings;
 
-            if (isset($booking->passengers[$i]->child) and $booking->passengers[$i]->child == 'yes') {
-                $booking->passengers[$i]->infoText[] = 'Child';
-            }
-            if (isset($booking->passengers[$i]->child) and $booking->passengers[$i]->small_headset == 'yes') {
-                $booking->passengers[$i]->infoText[] = 'Small Headset';
-            }
+        return $slot;
 
-            $booking->passengers[$i]->infoText = implode(', ', $booking->passengers[$i]->infoText);
-        }
-
-        if ($booking->mobile !== null) {
-            $booking->mobile = decrypt($booking->mobile);
-        }
-
-        if ($booking->internal_information !== null) {
-            $booking->internal_information = decrypt($booking->internal_information);
-        }
-
-        return view('mobile/booking', ['title' => 'Add Booking', 'booking' => $booking]);
+        return view('mobile/booking', ['title' => 'Booking', 'slot' => $slot]);
     }
 
     /**
@@ -288,44 +262,54 @@ class BookingController extends Controller
      */
     public function show(Booking $booking)
     {
-        $hash = json_encode([
-            $booking->id,
-            $booking->passengers,
-            $booking->slot_id,
-        ]);
-        $hash = hash_hmac('sha256', $hash, env('APP_KEY'));
-        $hash = substr($hash, 0, 5);
+        $data = [
+            'slot' => [
+                'flight_number' => $booking->slot->flight_number,
+                'starts_at' => (new Carbon($booking->slot->starts_on, 'UTC'))->toIso8601ZuluString(),
+                'boarding' => (new Carbon($booking->slot->starts_on, 'UTC'))->subMinutes(15)->toIso8601ZuluString(),
+                'duration' => ((new Carbon($booking->slot->ends_on, 'UTC'))->diff((new Carbon($booking->slot->starts_on, 'UTC'))))->format('%H:%I'),
+            ],
+            'booking' => [
+                'shortcode' => $booking->shortcode
+            ],
+            'tickets' => $booking->tickets->map(function ($ticket) use ($booking) {
+                $hash = json_encode([
+                    $booking->id,
+                    $ticket->id,
+                    $booking->slot->id,
+                ]);
+                $hash = hash_hmac('sha256', $hash, env('APP_KEY'));
+                $hash = substr($hash, 0, 10);
 
-        $text = 'https://192.168.178.26/booking-system/bookings/ma/'.$booking->id.'/'.$hash.'/';
+                $text = action('BookingController@fastAccess', ['ticket_id' => $ticket->id, 'hash' => $hash]);
 
-        $pdf417 = new PDF417();
-        $pdf417->setSecurityLevel(4);
-        $data = $pdf417->encode($text);
+                $pdf417 = new PDF417();
+                $pdf417->setSecurityLevel(4);
+                $data = $pdf417->encode($text);
 
-        $renderer = new ImageRenderer([
-            'format' => 'data-url',
-            'ratio' => 2
-        ]);
-        $img = $renderer->render($data);
+                $renderer = new ImageRenderer([
+                    'format' => 'data-url',
+                    'ratio' => 2
+                ]);
+                $img = $renderer->render($data);
 
-        $passengers = json_decode($booking->passengers);
+                $special = '';
+                if ($ticket->small_headset == 1) {
+                    $special = 'SMALL HEADSET';
+                }
 
-        for($i = 0; $i < count($passengers); $i++) {
-            $passengers[$i]->firstname = decrypt($passengers[$i]->firstname);
-            $passengers[$i]->lastname = decrypt($passengers[$i]->lastname);
-            $passengers[$i]->name = $passengers[$i]->firstname . ' ' . $passengers[$i]->lastname;
-        }
+                return [
+                    'shortcode' => $ticket->shortcode,
+                    'passenger' => $ticket->firstname.' '.$ticket->lastname,
+                    'created_at' => (new Carbon($ticket->created_at, 'UTC'))->toIso8601ZuluString(),
+                    'price' => 'EUR '.$ticket->price.',–',
+                    'special' => $special,
+                    'pdf417' => $img->encoded
+                ];
+            })
+        ];
 
-        return view(
-            'bookings/print',
-            [
-                'pdf317' => $img->encoded,
-                'booking' => $booking,
-                'passengers' => $passengers
-            ]);
-
-        exit();
-        return $booking;
+        return view('bookings/print', ['data' => $data]);
     }
 
     /**
@@ -436,6 +420,7 @@ class BookingController extends Controller
      */
     public function destroy(Booking $booking)
     {
+        $booking->tickets()->delete();
         $booking->slot->status = 'available';
         $booking->slot->save();
         $booking->delete();

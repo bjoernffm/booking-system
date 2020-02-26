@@ -22,7 +22,7 @@ Route::group(['middleware' => ['auth', 'verifiedStatus']], function () {
     Route::post('/slots/generator/step_2', 'SlotGeneratorController@storeStep2');
 
     Route::get('/bookings/add', 'BookingController@addIndex');
-    Route::get('/bookings/ma/{booking_id}/{hash}', 'BookingController@fastAccess');
+    Route::get('/ma/tickets/{ticket_id}/{hash}', 'BookingController@fastAccess');
 
     Route::resource('aircraft', 'AircraftController');
     Route::get('/aircraft/{id}/delete', 'AircraftController@prepareDestroy');
@@ -49,12 +49,10 @@ Route::get('/board', function(Request $request) {
 Route::get('/verify/mobile/{user}', function(Request $request, $userId) {
     $user = App\User::findOrFail($userId);
 
-    if($user->mobile_verified_at !== null) {
-        abort(403);
+    if($user->mobile_verified_at === null) {
+        $user->mobile_verified_at = now();
+        $user->save();
     }
-
-    $user->mobile_verified_at = now();
-    $user->save();
 
     return view(
         'mobile/alert',

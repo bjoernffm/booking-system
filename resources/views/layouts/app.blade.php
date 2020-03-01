@@ -40,6 +40,11 @@ The above copyright notice and this permission notice shall be included in all c
         <link href="{{ env('ROOT_PATH') }}/assets/css/bootstrap.min.css" rel="stylesheet" />
         <link href="{{ env('ROOT_PATH') }}/assets/css/paper-dashboard.css?v=2.0.0" rel="stylesheet" />
         <link href="{{ env('ROOT_PATH') }}/css/chosen.css" rel="stylesheet" />
+        <style>
+            .blurred {
+                filter: blur(10px) grayscale(50%);
+            }
+        </style>
     </head>
 
     <body>
@@ -99,7 +104,7 @@ The above copyright notice and this permission notice shall be included in all c
                     </ul>
                 </div>
             </div>
-            <div class="main-panel">
+            <div class="main-panel" style="position: relative;">
                 <!-- Navbar -->
                 <nav class="navbar navbar-expand-lg navbar-absolute fixed-top navbar-transparent">
                     <div class="container-fluid">
@@ -111,11 +116,11 @@ The above copyright notice and this permission notice shall be included in all c
                                     <span class="navbar-toggler-bar bar3"></span>
                                 </button>
                             </div>
-                            <span class="navbar-brand" style="color: #66615B;">
+                            <a class="navbar-brand" href="#pablo">
                                 @if (isset($title))
                                     {{ $title }}
                                 @endif
-                            </span>
+                            </a>
                         </div>
                         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navigation" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
                             <span class="navbar-toggler-bar navbar-kebab"></span>
@@ -123,36 +128,41 @@ The above copyright notice and this permission notice shall be included in all c
                             <span class="navbar-toggler-bar navbar-kebab"></span>
                         </button>
                         <div class="collapse navbar-collapse justify-content-end" id="navigation">
-                            @auth
+                            <form>
+                                <div class="input-group no-border" id="searchbox">
+                                </div>
+                            </form>
                             <ul class="navbar-nav">
                                 <li class="nav-item btn-rotate dropdown">
                                     <a class="nav-link dropdown-toggle" href="http://example.com" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <i class="nc-icon nc-settings-gear-65 d-lg-none"></i>
+                                        {{ Auth::user()->firstname }} {{ Auth::user()->lastname }}
                                         <p>
-                                            <span class="d-md-block">{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</span>
+                                            <span class="d-lg-none d-md-block">{{ Auth::user()->firstname }} {{ Auth::user()->lastname }}</span>
                                         </p>
                                     </a>
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                           onclick="event.preventDefault();  document.getElementById('logout-form').submit();">
-                                           Logout</a>
                                     <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                                        <a class="dropdown-item" href="#">Account</a>
                                         <a class="dropdown-item" href="{{ route('logout') }}"
-                                           onclick="event.preventDefault();  document.getElementById('logout-form').submit();">
-                                           Logout</a>
+                                                               onclick="event.preventDefault();  document.getElementById('logout-form').submit();">
+                                                               Logout</a>
                                     </div>
                                 </li>
                             </ul>
-                            @endif
-                            <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
-                                @csrf
-                            </form>
                         </div>
                     </div>
                 </nav>
-                <!-- End Navbar -->
+                <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                    @csrf
+                </form>
 
-                <div class="content">
+                <div id="hits" class="content" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 100;">
+                    <h1>
+                        Search Result
+                        <i class="nc-icon nc-simple-remove pull-right" style="cursor: pointer;" id="hitsCloseButton"></i>
+                    </h1>
+                    <div id="hitsResult"></div>
+                </div>
+
+                <div id="content" class="content">
                     @yield('content')
                 </div>
 
@@ -195,6 +205,9 @@ The above copyright notice and this permission notice shall be included in all c
         <script src="{{ env('ROOT_PATH') }}/assets/js/paper-dashboard.js" type="text/javascript"></script>
         <!--<script src="{{ env('ROOT_PATH') }}/js/app.js" type="text/javascript"></script>-->
         <!-- Paper Dashboard DEMO methods, don't include it in your project! -->
+        <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4.0.0/dist/algoliasearch-lite.umd.js" integrity="sha256-MfeKq2Aw9VAkaE9Caes2NOxQf6vUa8Av0JqcUXUGkd0=" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4.0.0/dist/instantsearch.production.min.js" integrity="sha256-6S7q0JJs/Kx4kb/fv0oMjS855QTz5Rc2hh9AkIUjUsk=" crossorigin="anonymous"></script>
+
         <script>
         $(document).ready(function() {
             $(".uppercaseInput").keypress((e) => {
@@ -210,6 +223,94 @@ The above copyright notice and this permission notice shall be included in all c
                     }
                 }
             });
+            const searchClient = algoliasearch('9XRNPC6UIT', '4dbd0e04e9e4a769b4de2caf3062475d');
+
+            const search = instantsearch({
+              indexName: 'item',
+              searchClient,
+            });
+
+            // 1. Create a render function
+            const renderHits = (renderOptions, isFirstRender) => {
+                const {
+                    hits,
+                    results,
+                    widgetParams,
+                } = renderOptions;
+
+                document.querySelector("#hitsResult").innerHTML = `
+                    <div class="row">
+                        ${hits
+                            .map(
+                            (item) => {
+                                let subtitle;
+                                let link;
+
+                                if (item.entity === "App\\Aircraft") {
+                                    subtitle = "<small>Aircraft</small>";
+                                    link = "{{ env('ROOT_PATH') }}/aircraft/"+item.item.id+"/edit";
+                                } else if (item.entity === "App\\User") {
+                                    subtitle = "<small>User</small>";
+                                    link = "{{ env('ROOT_PATH') }}/users/"+item.item.id+"/edit";
+                                } else if (item.entity === "App\\Slot") {
+                                    subtitle = "<small>Slot</small>";
+                                    link = "{{ env('ROOT_PATH') }}/overview?bySlotId="+item.item.id;
+                                } else if (item.entity === "App\\Booking") {
+                                    subtitle = "<small>Booking</small>";
+                                    link = "{{ env('ROOT_PATH') }}/overview?byBookingId="+item.item.id;
+                                } else if (item.entity === "App\\Ticket") {
+                                    subtitle = "<small><abbr title=\"Electronic Ticket\">ETKT</abbr></small>";
+                                    link = "{{ env('ROOT_PATH') }}/overview?byTicketId="+item.item.id;
+                                }
+
+                                return `<a href="${ link }" class="col-sm-3">
+                                            <div class="card">
+                                                <div class="card-body">
+                                                 ${ item.title }<br />
+                                                 <small>${ subtitle }</small>
+                                                </div>
+                                            </div>
+                                        </a>`;
+                                }
+                            )
+                        .join('')}
+                    </div>`;
+            }
+
+            const customHits = instantsearch.connectors.connectHits(
+                renderHits
+            );
+
+            $("#hitsCloseButton").click(function() {
+                $("#hits").hide();
+                $("#content").removeClass("blurred");
+                $("#searchbox").find("input").val("");
+            });
+
+            search.addWidgets([
+                instantsearch.widgets.searchBox({
+                    container: "#searchbox",
+                    placeholder: "Search ...",
+                    autofocus: false,
+                    showSubmit: false,
+                    showReset: false,
+                    cssClasses: {
+                        input: [
+                          "form-control"
+                        ],
+                    },
+                    queryHook(query, search) {
+                        $("#hits").show();
+                        $("#content").addClass("blurred");
+                        console.log('searching');
+                        search(query);
+                    },
+                }),
+
+                customHits({})
+            ]);
+
+            search.start();
             @yield('javascript')
         });
         </script>

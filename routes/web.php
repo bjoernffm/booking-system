@@ -31,6 +31,8 @@ Route::group(['middleware' => ['auth', 'verifiedStatus']], function () {
     Route::get('/users/{id}/delete', 'UserController@prepareDestroy');
     Route::get('/bookings/{id}/delete', 'BookingController@prepareDestroy');
 
+    Route::get('/overview', 'OverviewController@view');
+
     Route::resource('users', 'UserController');
     Route::resource('slots', 'SlotController');
     Route::resource('bookings', 'BookingController');
